@@ -7,6 +7,8 @@ expression modelling.
 Designed as a portfolio-grade workflow prioritising biological interpretability,
 statistical correctness, reproducibility, and explicit analytical decision-making.
 
+
+
 ### DATASET:
 
 Source: NCBI GEO (GSE152075)  
@@ -23,8 +25,11 @@ Balanced subset used:
 30 SARS-CoV-2 positive  
 30 SARS-CoV-2 negative  
 
-Balancing improves QC clarity, PCA interpretability, and statistical comparability
-while avoiding unnecessary heterogeneity.
+Balancing improves QC clarity, PCA interpretability, and statistical comparability,
+while reducing unnecessary heterogeneity.
+
+
+
 
 ### ANALYSIS WORKFLOW:
 
@@ -34,6 +39,8 @@ scripts/
 02_pca.R – PCA of variance-stabilised expression data  
 03_deseq2.R – differential expression analysis (DESeq2)  
 04_pathways.R – pathway enrichment (KEGG / GO)
+
+
 
 ### QUALITY CONTROL SUMMARY: 
 
@@ -45,9 +52,13 @@ After QC:
 14,744 genes  
 60 samples (30 positive / 30 negative)
 
+
+
 ### REQUIREMENTS:
 
 R ≥ 4.2; GEOquery; DESeq2; edgeR; tidyverse; ggplot2; pheatmap
+
+
 
 ### REPRODUCIBILITY:
 
@@ -56,6 +67,8 @@ source("scripts/01_qc.R")
 source("scripts/02_pca.R")  
 source("scripts/03_deseq2.R")  
 source("scripts/04_pathways.R")
+
+
 
 ### PROJECT INTENT:
 
