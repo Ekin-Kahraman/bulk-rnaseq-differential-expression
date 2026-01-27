@@ -1,4 +1,16 @@
-.Rproj.user
+# R session files
 .Rhistory
 .RData
-.Ruserdata
+.RDataTmp
+.Rproj.user/
+
+# Derived data
+data/raw/
+data/*.rds
+data/*.csv
+
+# Results
+results/
+
+# OS
+.DS_Store
