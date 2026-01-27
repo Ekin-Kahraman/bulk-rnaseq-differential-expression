@@ -28,13 +28,15 @@ stopifnot(all(colnames(counts) == metadata$sample_id))
 # Large differences in sequencing depth can indicate technical artefacts.
 # We inspect library sizes before any filtering or modelling decisions.
 
-library_sizes <- colSums(counts, na.rm = TRUE)
+library_sizes <- colSums(counts)
 
 qc_libsize <- tibble(
-  sample_id    = names(library_sizes),
+  sample_id = names(library_sizes),
   library_size = library_sizes,
-  condition    = metadata$condition
-)
+  condition = metadata$condition
+) %>%
+  filter(library_size > 0)
+
 
 dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
 
