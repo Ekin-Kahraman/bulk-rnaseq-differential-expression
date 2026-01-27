@@ -1,151 +1,111 @@
-# =============================================================================
-# 🧬 Bulk RNA-seq Differential Expression Analysis (R)
-# =============================================================================
+# Bulk RNA-seq Differential Expression Analysis (R)
 #
-# This repository implements a reproducible, modular bulk RNA-seq analysis
-# pipeline in R, demonstrating practical competence in:
+# Reproducible, modular bulk RNA-seq analysis pipeline in R demonstrating:
+# - RNA-seq data acquisition
+# - quality control (QC)
+# - exploratory analysis
+# - differential expression modelling
 #
-#   - RNA-seq data acquisition
-#   - quality control (QC)
-#   - exploratory analysis
-#   - differential expression modelling
+# Designed as a portfolio-grade workflow prioritising:
+# - biological interpretability
+# - statistical correctness
+# - reproducibility
+# - explicit analytical decision-making
 #
-# The project is designed as a portfolio-grade bioinformatics workflow,
-# prioritising:
+# ------------------------------------------------
+# Dataset
+# ------------------------------------------------
 #
-#   - biological interpretability
-#   - statistical correctness
-#   - reproducibility
-#   - explicit analytical decision-making
+# Source: NCBI GEO (GSE152075)
+# Organism: Homo sapiens
+# Data type: Bulk RNA-seq (raw count matrix)
+# Biological context: SARS-CoV-2 infection status
 #
-# over unnecessary technical complexity.
-#
-# =============================================================================
-# 📊 Dataset
-# =============================================================================
-#
-# Source:
-#   - NCBI GEO — GSE152075
-#
-# Organism:
-#   - Homo sapiens
-#
-# Data type:
-#   - Bulk RNA-seq (raw count matrix)
-#
-# Biological context:
-#   - SARS-CoV-2 infection status
-#
-# Original dataset composition:
-#   - 484 total samples
+# Original dataset:
+# - 484 samples
 #   - 430 SARS-CoV-2 positive
-#   - 54 SARS-CoV-2 negative
+#   - 54  SARS-CoV-2 negative
 #
-# Due to strong class imbalance, a balanced subset was deliberately constructed
-# to maximise interpretability and reduce unnecessary heterogeneity:
+# Balanced subset used:
+# - 30 SARS-CoV-2 positive
+# - 30 SARS-CoV-2 negative
 #
-#   - 30 SARS-CoV-2 positive samples
-#   - 30 SARS-CoV-2 negative samples
+# Balancing improves QC clarity, PCA interpretability, and statistical
+# comparability while avoiding unnecessary heterogeneity.
 #
-# This design choice improves:
+# All data acquisition, filtering, and subsetting steps are fully reproducible.
 #
-#   - QC clarity
-#   - PCA interpretability
-#   - statistical comparability
-#   - interview-level explainability
+# ------------------------------------------------
+# Analysis workflow
+# ------------------------------------------------
 #
-# All data acquisition, filtering, and subsetting steps are fully reproducible
-# via script.
+# scripts/
+# ├── 00_get_data.R    Download GEO data and construct balanced subset
+# ├── 01_qc.R          Library QC, gene filtering, variance stabilisation
+# ├── 02_pca.R         PCA of variance-stabilised expression data
+# ├── 03_deseq2.R      Differential expression analysis (DESeq2)
+# └── 04_pathways.R   Pathway enrichment analysis (KEGG / GO)
 #
-# =============================================================================
-# 🧪 Analysis Workflow
-# =============================================================================
+# Scripts are executed sequentially, with each step consuming outputs
+# from the previous stage.
 #
-# The pipeline is organised into modular scripts, each responsible for a single
-# analytical stage:
+# All derived data objects and figures are regenerated from code.
 #
-#   scripts/
-#   ├── 00_get_data.R    # Download GEO data and construct balanced sample subset
-#   ├── 01_qc.R          # Library QC, gene filtering, variance stabilisation
-#   ├── 02_pca.R         # PCA of variance-stabilised expression data
-#   ├── 03_deseq2.R      # Differential expression analysis (DESeq2)
-#   └── 04_pathways.R   # Pathway enrichment analysis (KEGG / GO)
+# ------------------------------------------------
+# Quality control summary
+# ------------------------------------------------
 #
-# Scripts are executed sequentially, with each step consuming the outputs of
-# the previous stage.
+# QC steps:
+# - Removal of failed libraries (zero or invalid counts)
+# - Library size inspection across conditions
+# - CPM-based low-count gene filtering
 #
-# Derived data objects and figures are not version-controlled and are
-# regenerated from scripts to ensure full reproducibility.
+# Filtering rule:
+# - Genes retained if expressed at ≥ 1 CPM in ≥ 10 samples
 #
-# =============================================================================
-# 🔍 Quality Control Summary
-# =============================================================================
+# Transformation:
+# - Variance stabilising transformation (VST) for PCA and exploration
 #
-# Key QC steps include:
+# After QC:
+# - 14,744 genes retained
+# - 60 samples (30 positive / 30 negative)
 #
-#   - Removal of failed libraries (zero or invalid counts)
-#   - Library size inspection across experimental conditions
-#   - CPM-based low-count gene filtering
-#
-# Gene filtering rule:
-#
-#   - Genes retained if expressed at ≥ 1 CPM in ≥ 10 samples
-#
-# Downstream transformation:
-#
-#   - Variance stabilising transformation (VST) for PCA and exploratory analysis
-#
-# After QC and filtering:
-#
-#   - 14,744 genes retained
-#   - 60 samples (30 positive / 30 negative)
-#
-# The dataset passes QC and is suitable for exploratory analysis and
+# Dataset passes QC and is suitable for exploratory analysis and
 # differential expression modelling.
 #
-# =============================================================================
-# 🛠 Requirements
-# =============================================================================
+# ------------------------------------------------
+# Requirements
+# ------------------------------------------------
 #
-# Key R packages used:
+# R ≥ 4.2
+# Packages:
+# - GEOquery
+# - DESeq2
+# - edgeR
+# - tidyverse
+# - ggplot2
+# - pheatmap
 #
-#   - GEOquery
-#   - DESeq2
-#   - edgeR
-#   - tidyverse
-#   - ggplot2
-#   - pheatmap
+# ------------------------------------------------
+# Reproducibility
+# ------------------------------------------------
 #
-# R version:
+# Run full analysis from scratch:
 #
-#   - R ≥ 4.2
+# source("scripts/00_get_data.R")
+# source("scripts/01_qc.R")
+# source("scripts/02_pca.R")
+# source("scripts/03_deseq2.R")
+# source("scripts/04_pathways.R")
 #
-# =============================================================================
-# 🎯 Project Intent
-# =============================================================================
+# ------------------------------------------------
+# Project intent
+# ------------------------------------------------
 #
-# This repository is intended to demonstrate:
-#
-#   - Correct handling of public RNA-seq count data
-#   - Sound experimental design decisions
-#   - Robust QC and filtering strategy
-#   - Familiarity with standard bulk RNA-seq workflows
-#   - Clear communication of analytical rationale
-#
-# It is suitable for academic review, bioinformatics internship applications,
-# and technical interviews.
-#
-# =============================================================================
-# 📌 Reproducibility
-# =============================================================================
-#
-# To reproduce the analysis from scratch:
-#
-#   source("scripts/00_get_data.R")
-#   source("scripts/01_qc.R")
-#   source("scripts/02_pca.R")
-#   source("scripts/03_deseq2.R")
-#   source("scripts/04_pathways.R")
-#
-# =============================================================================
+# Demonstrates:
+# - correct handling of public RNA-seq count data
+# - sound experimental design decisions
+# - robust QC and filtering strategy
+# - familiarity with standard bulk RNA-seq workflows
+# - clear communication of analytical rationale
 
