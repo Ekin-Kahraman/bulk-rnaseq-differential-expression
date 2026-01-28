@@ -68,17 +68,14 @@ changes at the systems level, highlighting immune- and antiviral-response
 processes characteristic of SARS-CoV-2 infection.
 
 
-![PCA Plot](results/figures/pca_plot.png)
+![PCA Plot](./results/figures/pca_plot.png)
 
-*Principal component analysis of variance-stabilised expression data shows partial
-separation between SARS-CoV-2–positive and negative samples, indicating that infection
-status contributes meaningfully to global transcriptional variation.*
+#### Differential Expression
+Using DESeq2, I identified significant expression changes consistent with a host antiviral response. The most strongly up-regulated genes in positive samples correspond to canonical **Interferon-Stimulated Genes (ISGs)** such as *ISG15*, *OAS1*, and *MX1*.
 
-![Volcano Plot](results/figures/volcano_plot.png)
+![Volcano Plot](./results/figures/volcano_plot.png)
 
-*Volcano plot of differential expression results (DESeq2). Significantly altered genes
-(FDR < 0.05) show strong up-regulation of antiviral and interferon-associated genes in
-SARS-CoV-2–positive samples, consistent with a host innate immune response.*
+*Volcano plot illustrating significant up-regulation (orange) of immune-response genes in infected samples (FDR < 0.05, |log2FC| > 1).*
 
 
 
