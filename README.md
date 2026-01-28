@@ -125,4 +125,5 @@ source("scripts/00_get_data.R")
 source("scripts/01_qc.R")
 source("scripts/02_pca.R")
 source("scripts/03_deseq2.R")
-source("scripts/04_pathways.R")
+source("scripts/04_volcano.R")
+
