@@ -1,9 +1,7 @@
-# ============================================================
 # Script: 01_qc.R
 # Purpose: Quality control and filtering of bulk RNA-seq data
 # Project: Bulk RNA-seq Differential Expression Analysis
 # Author: Ekin Kahraman
-# ============================================================
 
 suppressPackageStartupMessages({
   library(DESeq2)
@@ -11,17 +9,11 @@ suppressPackageStartupMessages({
   library(ggplot2)
 })
 
-# ------------------------------------------------------------
-# 1. Load frozen inputs (AUTHORITATIVE)
-# ------------------------------------------------------------
-
+# Load processed raw inputs
 counts   <- readRDS("data/counts_raw.rds")   # raw integer counts
-metadata <- readRDS("data/metadata.rds")     # rownames = sample IDs
+metadata <- readRDS("data/metadata.rds")     # sample metadata
 
-# ------------------------------------------------------------
-# 2. HARD INVARIANTS (fail fast)
-# ------------------------------------------------------------
-
+# Basic integrity checks
 stopifnot(
   is.matrix(counts),
   storage.mode(counts) == "integer",
@@ -33,29 +25,18 @@ stopifnot(
   all(colnames(counts) == rownames(metadata))
 )
 
-# ------------------------------------------------------------
-# 3. COLLAPSE DUPLICATE GENE IDS (CRITICAL FIX)
-# ------------------------------------------------------------
-# Rationale:
-# Author-provided count matrices often contain duplicate gene identifiers
-# (e.g. multiple transcripts mapping to the same gene).
-# DESeq2 requires unique rownames.
-# We collapse duplicates at the gene level by summing counts.
-
+# Collapse duplicated gene identifiers by summing counts
+# (required for DESeq2 compatibility)
 if (any(duplicated(rownames(counts)))) {
   counts <- rowsum(counts, group = rownames(counts))
 }
 
-# Sanity check post-collapse
 stopifnot(
   !any(duplicated(rownames(counts))),
   nrow(counts) > 0
 )
 
-# ------------------------------------------------------------
-# 4. Library size QC (pre-filtering)
-# ------------------------------------------------------------
-
+# Inspect library sizes
 library_sizes <- colSums(counts)
 
 qc_df <- data.frame(
@@ -85,10 +66,7 @@ ggsave(
   height = 4
 )
 
-# ------------------------------------------------------------
-# 5. Remove failed libraries (zero-count samples)
-# ------------------------------------------------------------
-
+# Remove samples with zero total counts
 keep_samples <- library_sizes > 0
 
 counts   <- counts[, keep_samples, drop = FALSE]
@@ -100,11 +78,8 @@ stopifnot(
   all(colnames(counts) == rownames(metadata))
 )
 
-# ------------------------------------------------------------
-# 6. Low-expression gene filtering (CPM-based)
-# ------------------------------------------------------------
-# Decisions are made on CPM, but RAW counts are retained
-
+# Filter lowly expressed genes using CPM
+# (raw counts retained for downstream modelling)
 cpm_mat <- edgeR::cpm(counts)
 
 keep_genes <- rowSums(cpm_mat >= 1) >= 10
@@ -122,24 +97,16 @@ stopifnot(
 )
 
 message(
-  "QC filtering complete: retained ",
+  "QC complete: retained ",
   nrow(counts_filt), " genes across ",
   ncol(counts_filt), " samples"
 )
 
-# ------------------------------------------------------------
-# 7. Save CLEAN RAW counts for DESeq2
-# ------------------------------------------------------------
-
-dir.create("data", recursive = TRUE, showWarnings = FALSE)
-
+# Save filtered raw counts
 saveRDS(counts_filt, "data/counts_clean.rds")
 saveRDS(metadata,    "data/metadata_clean.rds")
 
-# ------------------------------------------------------------
-# 8. Variance stabilisation (for PCA / visualisation ONLY)
-# ------------------------------------------------------------
-
+# Variance stabilisation for exploratory analysis only
 metadata$condition <- factor(metadata$condition)
 
 dds_tmp <- DESeqDataSetFromMatrix(
@@ -151,7 +118,6 @@ dds_tmp <- DESeqDataSetFromMatrix(
 dds_tmp <- dds_tmp[rowSums(counts(dds_tmp)) > 0, ]
 
 vsd <- varianceStabilizingTransformation(dds_tmp, blind = TRUE)
-
 
 saveRDS(vsd, "data/vst_object.rds")
 

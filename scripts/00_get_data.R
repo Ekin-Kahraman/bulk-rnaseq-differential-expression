@@ -1,9 +1,7 @@
-# ============================================================
 # Script: 00_get_data.R
-# Purpose: Download and prepare raw RNA-seq count data
+# Purpose: Download raw RNA-seq counts and create a balanced dataset
 # Project: Bulk RNA-seq Differential Expression Analysis
 # Author: Ekin Kahraman
-# ============================================================
 
 suppressPackageStartupMessages({
   library(GEOquery)
@@ -11,34 +9,21 @@ suppressPackageStartupMessages({
   library(tibble)
 })
 
-# ------------------------------------------------------------
-# 1. GEO accession
-# ------------------------------------------------------------
-
+# GEO accession
 geo_accession <- "GSE152075"
 
-# ------------------------------------------------------------
-# 2. Directory structure
-# ------------------------------------------------------------
-
+# Create data directories
 dir.create("data/raw", recursive = TRUE, showWarnings = FALSE)
 dir.create("data", recursive = TRUE, showWarnings = FALSE)
 
-# ------------------------------------------------------------
-# 3. Download supplementary files (raw counts)
-# ------------------------------------------------------------
-
+# Download supplementary GEO files
 getGEOSuppFiles(
   geo_accession,
   makeDirectory = TRUE,
   baseDir = "data/raw"
 )
 
-
-# ------------------------------------------------------------
-# 4. Locate raw count matrix file (ROBUST)
-# ------------------------------------------------------------
-
+# Locate raw count matrix
 count_files <- list.files(
   path = file.path("data/raw", geo_accession),
   pattern = "raw_counts.*\\.txt(\\.gz)?$",
@@ -46,17 +31,11 @@ count_files <- list.files(
 )
 
 stopifnot(length(count_files) >= 1)
-
-# If multiple matches exist, take the first deterministically
 count_file <- count_files[1]
 
 message("Using count file: ", basename(count_file))
 
-
-# ------------------------------------------------------------
-# 5. Read raw count matrix
-# ------------------------------------------------------------
-
+# Read count matrix
 counts_df <- read.table(
   count_file,
   header = TRUE,
@@ -66,36 +45,26 @@ counts_df <- read.table(
   comment.char = ""
 )
 
-# First column = gene IDs
+# First column contains gene identifiers
 gene_ids <- counts_df[[1]]
 
-# Remaining columns = counts
 counts_raw <- counts_df[, -1]
 counts_raw[] <- lapply(counts_raw, as.numeric)
 
 counts_raw <- as.matrix(counts_raw)
 rownames(counts_raw) <- gene_ids
 
-# ------------------------------------------------------------
-# 6. Remove genes with parsing failures
-# ------------------------------------------------------------
-
+# Remove genes with parsing issues
 bad_genes <- rowSums(is.na(counts_raw)) > 0
 counts_raw <- counts_raw[!bad_genes, , drop = FALSE]
 
-# ------------------------------------------------------------
-# 7. Enforce integer raw counts (safely)
-# ------------------------------------------------------------
-
+# Confirm data are raw integer counts
 if (any(abs(counts_raw - round(counts_raw)) > 1e-6)) {
-  stop("Non-integer values detected: input is NOT raw counts")
+  stop("Non-integer values detected: input is not raw count data")
 }
 storage.mode(counts_raw) <- "integer"
 
-# ------------------------------------------------------------
-# 8. Basic sanity checks
-# ------------------------------------------------------------
-
+# Basic integrity checks
 stopifnot(
   nrow(counts_raw) > 0,
   ncol(counts_raw) > 0,
@@ -103,14 +72,8 @@ stopifnot(
   all(colSums(counts_raw) > 0)
 )
 
-# ------------------------------------------------------------
-# 9. Infer condition directly from column names (ROBUST)
-# ------------------------------------------------------------
-
+# Assign infection status from sample names
 sample_names <- colnames(counts_raw)
-
-# Inspect once (debug)
-# head(sample_names)
 
 condition <- ifelse(
   grepl("covid|sars|positive|pos", sample_names, ignore.case = TRUE),
@@ -122,19 +85,15 @@ condition <- ifelse(
   )
 )
 
-# Drop samples with unknown status
+# Keep only labelled samples
 keep <- !is.na(condition)
 
 counts_labeled <- counts_raw[, keep, drop = FALSE]
 condition <- condition[keep]
-sample_names <- sample_names[keep]
 
-table(condition)  # SHOULD SHOW ~430 positive / ~54 negative
+table(condition)
 
-# ------------------------------------------------------------
-# 10. Construct balanced subset (30 / 30)
-# ------------------------------------------------------------
-
+# Create balanced subset (30 positive / 30 negative)
 set.seed(42)
 
 pos_idx <- which(condition == "positive")
@@ -145,11 +104,7 @@ stopifnot(
   length(neg_idx) >= 30
 )
 
-pos_keep <- sample(pos_idx, 30)
-neg_keep <- sample(neg_idx, 30)
-
-keep_idx <- c(pos_keep, neg_keep)
-
+keep_idx <- c(sample(pos_idx, 30), sample(neg_idx, 30))
 counts_bal <- counts_labeled[, keep_idx, drop = FALSE]
 
 metadata <- data.frame(
@@ -158,21 +113,14 @@ metadata <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# ------------------------------------------------------------
-# 11. Final sanity checks
-# ------------------------------------------------------------
-
+# Final consistency checks
 stopifnot(
   ncol(counts_bal) == 60,
   nrow(metadata) == 60,
-  all(colnames(counts_bal) == rownames(metadata)),
-  max(counts_bal) > 0
+  all(colnames(counts_bal) == rownames(metadata))
 )
 
-# ------------------------------------------------------------
-# 12. Save frozen raw data
-# ------------------------------------------------------------
-
+# Save processed inputs
 saveRDS(counts_bal, "data/counts_raw.rds")
 saveRDS(metadata,    "data/metadata.rds")
 
