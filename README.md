@@ -4,11 +4,14 @@ Differential expression analysis of nasopharyngeal swab RNA-seq data comparing S
 
 ## Dataset
 
+## Dataset
+
 - **Source:** [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075) (NCBI GEO)
-- **Reference:** [Lieberman et al. (2020)](https://doi.org/10.1016/j.cell.2020.10.037) *Cell* 183(4):1016-1027
-- **Platform:** Illumina NovaSeq 6000 (Homo sapiens)
+- **Reference:** Lieberman et al. (2020). *Cell* **183**(6):1479–1495.e20  
+  https://doi.org/10.1016/j.cell.2020.10.001
+- **Platform:** Illumina NovaSeq 6000 (*Homo sapiens*)
 - **Sample type:** Nasopharyngeal swabs
-- **Original dataset:** 484 samples (430 positive, 54 negative)
+- **Original dataset:** 484 samples (430 SARS-CoV-2 positive, 54 negative)
 - **Analysis subset:** 60 samples (30 per group, balanced)
 
 ## Project Structure
