@@ -67,6 +67,21 @@ Pathway enrichment analysis (KEGG / GO) is used to contextualise these gene-leve
 changes at the systems level, highlighting immune- and antiviral-response
 processes characteristic of SARS-CoV-2 infection.
 
+### KEY RESULTS (GENE-LEVEL):
+
+A volcano plot of differential expression highlights a small number of genes with
+large effect sizes and strong statistical support. The most strongly up-regulated
+genes in SARS-CoV-2–positive samples are consistent with a canonical interferon-
+mediated antiviral response.
+
+Several of the top-ranked signals correspond to interferon-stimulated genes (ISGs),
+such as ISG15, OAS family members, and MX genes, which are known to restrict viral
+replication and amplify innate immune signalling.
+
+This pattern indicates that the dominant transcriptional signal in the dataset
+reflects host innate immune activation rather than technical or batch-driven effects.
+
+
 
 
 ### REQUIREMENTS:
