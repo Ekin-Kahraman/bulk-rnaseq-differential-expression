@@ -70,16 +70,15 @@ processes characteristic of SARS-CoV-2 infection.
 
 ## Key Results
 
-
-
 ### PCA of samples
-![PCA plot](results/figures/pca_plot.png)
+<img src="results/figures/pca_plot.png" width="600">
 
 ### Library size QC
-![Library size QC](results/figures/qc_library_size.png)
+<img src="results/figures/qc_library_size.png" width="550">
 
 ### Differential expression (volcano)
-![Volcano plot](results/figures/volcano_plot.png)
+<img src="results/figures/volcano_plot.png" width="650">
+
 
 
 
