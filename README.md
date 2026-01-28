@@ -4,14 +4,20 @@ Differential expression analysis of nasopharyngeal swab RNA-seq data comparing S
 
 ## Dataset
 
-- **Source:** [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075) (NCBI GEO)
-- **Reference:** Lieberman et al. (2020). *In vivo antiviral host transcriptional response to SARS-CoV-2 by viral load, sex, and age*.  
-  *Cell* **183**(6):1479–1495.e20  
-  https://doi.org/10.1016/j.cell.2020.10.001
+- **Source:** GSE152075 (NCBI GEO)  
+  https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075
+
+- **Reference:** Lieberman NAP, Peddu V, Xie H, Shrestha L, Huang M-L, Mears MC, et al. (2020).  
+  *In vivo antiviral host transcriptional response to SARS-CoV-2 by viral load, sex, and age*.  
+  **PLoS Biology** 18(9): e3000849.  
+  https://doi.org/10.1371/journal.pbio.3000849
+
 - **Platform:** Illumina NovaSeq 6000 (*Homo sapiens*)
 - **Sample type:** Nasopharyngeal swabs
 - **Original dataset:** 484 samples (430 SARS-CoV-2 positive, 54 negative)
 - **Analysis subset:** 60 samples (30 positive, 30 negative; balanced)
+
+
 
 
 ## Project Structure
