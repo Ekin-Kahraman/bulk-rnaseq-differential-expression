@@ -9,8 +9,10 @@ data/raw/
 data/*.rds
 data/*.csv
 
-# Results
-results/
+# Results (ignore data, keep figures)
+results/*
+!results/figures/
+!results/figures/*.png
 
 # OS
 .DS_Store
