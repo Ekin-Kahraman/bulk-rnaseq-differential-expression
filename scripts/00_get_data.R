@@ -1,129 +1,81 @@
-# Script: 00_get_data.R
-# Purpose: Download raw RNA-seq counts and create a balanced dataset
-# Project: Bulk RNA-seq Differential Expression Analysis
-# Author: Ekin Kahraman
+#!/usr/bin/env Rscript
+# Download and prepare SARS-CoV-2 RNA-seq data from GEO
+# Dataset: GSE152075 (nasopharyngeal swabs, pos/neg)
 
-suppressPackageStartupMessages({
-  library(GEOquery)
-  library(dplyr)
-  library(tibble)
-})
+library(GEOquery)
 
-# GEO accession
-geo_accession <- "GSE152075"
+GEO_ID <- "GSE152075"
 
-# Create data directories
+# Setup directories
 dir.create("data/raw", recursive = TRUE, showWarnings = FALSE)
 dir.create("data", recursive = TRUE, showWarnings = FALSE)
 
-# Download supplementary GEO files
-getGEOSuppFiles(
-  geo_accession,
-  makeDirectory = TRUE,
-  baseDir = "data/raw"
-)
+message("Downloading ", GEO_ID)
 
-# Locate raw count matrix
-count_files <- list.files(
-  path = file.path("data/raw", geo_accession),
-  pattern = "raw_counts.*\\.txt(\\.gz)?$",
-  full.names = TRUE
-)
+# Download supplementary files
+getGEOSuppFiles(GEO_ID, makeDirectory = TRUE, baseDir = "data/raw")
 
-stopifnot(length(count_files) >= 1)
-count_file <- count_files[1]
+# Extract archives
+supp_dir <- file.path("data/raw", GEO_ID)
+tar_files <- list.files(supp_dir, pattern = "\\.tar$", full.names = TRUE)
+invisible(lapply(tar_files, untar, exdir = supp_dir))
 
-message("Using count file: ", basename(count_file))
+# Find count matrix
+files <- list.files(supp_dir, recursive = TRUE, full.names = TRUE)
+count_file <- files[grepl("count.*\\.txt", basename(files), ignore.case = TRUE)][1]
 
-# Read count matrix
-counts_df <- read.table(
-  count_file,
-  header = TRUE,
-  sep = "",
-  stringsAsFactors = FALSE,
-  check.names = FALSE,
-  comment.char = ""
-)
+if (is.na(count_file)) stop("Count matrix not found")
 
-# First column contains gene identifiers
-gene_ids <- counts_df[[1]]
+message("Reading: ", basename(count_file))
 
-counts_raw <- counts_df[, -1]
-counts_raw[] <- lapply(counts_raw, as.numeric)
+# Load counts with gene IDs as rownames
+raw_counts <- read.table(count_file, header = TRUE, row.names = 1, 
+                         check.names = FALSE, stringsAsFactors = FALSE)
+raw_counts <- as.matrix(raw_counts)
+storage.mode(raw_counts) <- "integer"
+raw_counts <- raw_counts[complete.cases(raw_counts), ]
 
-counts_raw <- as.matrix(counts_raw)
-rownames(counts_raw) <- gene_ids
+message(nrow(raw_counts), " genes × ", ncol(raw_counts), " samples")
 
-# Remove genes with parsing issues
-bad_genes <- rowSums(is.na(counts_raw)) > 0
-counts_raw <- counts_raw[!bad_genes, , drop = FALSE]
+# Get sample metadata
+gse <- getGEO(GEO_ID, GSEMatrix = TRUE)
+pheno <- pData(gse[[1]])
 
-# Confirm data are raw integer counts
-if (any(abs(counts_raw - round(counts_raw)) > 1e-6)) {
-  stop("Non-integer values detected: input is not raw count data")
-}
-storage.mode(counts_raw) <- "integer"
-
-# Basic integrity checks
-stopifnot(
-  nrow(counts_raw) > 0,
-  ncol(counts_raw) > 0,
-  max(counts_raw) > 0,
-  all(colSums(counts_raw) > 0)
-)
-
-# Assign infection status from sample names
-sample_names <- colnames(counts_raw)
-
+# Parse SARS-CoV-2 status from characteristics
+positivity <- pheno$characteristics_ch1
 condition <- ifelse(
-  grepl("covid|sars|positive|pos", sample_names, ignore.case = TRUE),
-  "positive",
-  ifelse(
-    grepl("control|negative|neg|healthy", sample_names, ignore.case = TRUE),
-    "negative",
-    NA
-  )
+  grepl("positivity:\\s*pos", positivity, ignore.case = TRUE), "positive",
+  ifelse(grepl("positivity:\\s*neg", positivity, ignore.case = TRUE), "negative", NA)
 )
 
-# Keep only labelled samples
-keep <- !is.na(condition)
+# Extract sample IDs (POS_### or NEG_###) from titles
+sample_ids <- sub(".*\\b(POS_\\d+|NEG_\\d+)\\b.*", "\\1", pheno$title)
 
-counts_labeled <- counts_raw[, keep, drop = FALSE]
-condition <- condition[keep]
-
-table(condition)
-
-# Create balanced subset (30 positive / 30 negative)
-set.seed(42)
-
-pos_idx <- which(condition == "positive")
-neg_idx <- which(condition == "negative")
-
-stopifnot(
-  length(pos_idx) >= 30,
-  length(neg_idx) >= 30
-)
-
-keep_idx <- c(sample(pos_idx, 30), sample(neg_idx, 30))
-counts_bal <- counts_labeled[, keep_idx, drop = FALSE]
-
+# Build metadata - ensure it stays a dataframe
 metadata <- data.frame(
-  condition = condition[keep_idx],
-  row.names = colnames(counts_bal),
+  sample_id = sample_ids,
+  condition = condition,
+  row.names = sample_ids,
   stringsAsFactors = FALSE
 )
 
-# Final consistency checks
-stopifnot(
-  ncol(counts_bal) == 60,
-  nrow(metadata) == 60,
-  all(colnames(counts_bal) == rownames(metadata))
-)
+# Convert condition to factor
+metadata$condition <- factor(metadata$condition, levels = c("negative", "positive"))
 
-# Save processed inputs
-saveRDS(counts_bal, "data/counts_raw.rds")
-saveRDS(metadata,    "data/metadata.rds")
+# Align counts with metadata
+common <- intersect(colnames(raw_counts), rownames(metadata))
+raw_counts <- raw_counts[, common, drop = FALSE]
+metadata <- metadata[common, , drop = FALSE]
 
-message("00_get_data.R complete")
-message("Genes: ", nrow(counts_bal), " | Samples: ", ncol(counts_bal))
+# Verify structure
+stopifnot(is.data.frame(metadata))
+stopifnot("condition" %in% colnames(metadata))
 
+message(sum(metadata$condition == "negative"), " negative, ",
+        sum(metadata$condition == "positive"), " positive")
+
+# Save
+saveRDS(raw_counts, "data/counts_raw.rds")
+saveRDS(metadata, "data/metadata.rds")
+
+message("Data saved")

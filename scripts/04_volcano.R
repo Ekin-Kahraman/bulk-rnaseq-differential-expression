@@ -1,62 +1,93 @@
 # 04_volcano.R
-# Volcano plot of DESeq2 results highlighting key antiviral genes
+# Volcano plot of differential expression
 
-suppressPackageStartupMessages({
-  library(ggplot2)
-  library(ggrepel)
-  library(dplyr)
-})
+library(ggplot2)
+library(ggrepel)
+library(dplyr)
 
-# ---- Load DE results ----
-res <- read.csv(
-  "results/tables/deseq2_results.csv",
-  row.names = 1
-)
+# Load results - do NOT use row.names
+res <- read.csv("results/tables/deseq2_results.csv", stringsAsFactors = FALSE)
 
+cat("Loaded", nrow(res), "genes\n")
+cat("Columns:", paste(colnames(res), collapse = ", "), "\n")
+
+# Verify gene column exists
+if (!"gene" %in% colnames(res)) {
+  stop("ERROR: 'gene' column not found in results file")
+}
+
+# Check first few gene names
+cat("First genes:", paste(head(res$gene, 5), collapse = ", "), "\n")
+
+# Filter and classify
 res <- res %>%
+  filter(!is.na(padj), !is.na(log2FoldChange)) %>%
   mutate(
-    gene = rownames(res),
-    sig = padj < 0.05 & abs(log2FoldChange) > 1
+    category = case_when(
+      padj >= 0.05 ~ "NS",
+      log2FoldChange > 1 ~ "Up",
+      log2FoldChange < -1 ~ "Down",
+      TRUE ~ "Marginal"
+    )
   )
 
-# ---- Select genes to label (top biological signals) ----
+# Select top genes for labeling
 label_genes <- res %>%
-  filter(padj < 0.01, abs(log2FoldChange) > 2) %>%
+  filter(padj < 0.001, abs(log2FoldChange) > 2) %>%
   arrange(padj) %>%
-  slice_head(n = 8)
+  head(10)
 
-# ---- Volcano plot ----
-p <- ggplot(res, aes(log2FoldChange, -log10(padj))) +
+cat("\nLabeling", nrow(label_genes), "genes:\n")
+print(label_genes$gene)
+
+# Volcano plot
+p <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj))) +
   geom_point(
-    aes(color = sig),
+    aes(color = category),
     alpha = 0.6,
-    size = 1.5
+    size = 1.8
   ) +
   scale_color_manual(
-    values = c("grey70", "orange"),
-    guide = "none"
+    values = c(
+      "Up" = "#e74c3c",
+      "Down" = "#3498db", 
+      "Marginal" = "#95a5a6",
+      "NS" = "grey80"
+    ),
+    breaks = c("Up", "Down"),
+    labels = c("Upregulated", "Downregulated")
   ) +
   geom_text_repel(
     data = label_genes,
     aes(label = gene),
-    size = 3,
-    max.overlaps = Inf,
-    box.padding = 0.4,
-    point.padding = 0.3
+    size = 3.5,
+    fontface = "italic",
+    max.overlaps = 20,
+    box.padding = 0.5,
+    segment.color = "grey50",
+    min.segment.length = 0
   ) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey40") +
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "grey40") +
   labs(
-    title = "Differential expression in SARS-CoV-2 infection",
-    x = "Log2 fold change (Positive vs Negative)",
-    y = "-log10 adjusted p-value"
+    title = "Differential Expression in SARS-CoV-2 Infection",
+    x = "log₂ Fold Change",
+    y = "−log₁₀ Adjusted P-value",
+    color = NULL
   ) +
-  theme_minimal()
+  theme_classic(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    legend.position = "bottom"
+  )
 
-# ---- Save output ----
 dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
+ggsave("results/figures/volcano_plot.png", p, width = 8, height = 7, dpi = 300)
 
-ggsave(
-  "results/figures/volcano_plot.png",
-  plot = p,
-  width = 7,
-  height = 6
+write.csv(
+  label_genes %>% select(gene, log2FoldChange, padj, baseMean),
+  "results/tables/top_volcano_genes.csv",
+  row.names = FALSE
 )
+
+cat("\nVolcano plot saved\n")

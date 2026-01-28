@@ -1,11 +1,12 @@
 # Bulk RNA-seq Differential Expression Analysis (R)
 
-A reproducible, modular bulk RNA-seq analysis pipeline in R demonstrating
-data acquisition, quality control (QC), exploratory analysis, and differential
-expression modelling.
+A reproducible, modular bulk RNA-seq differential expression pipeline in R.
 
-Designed as a portfolio-grade workflow with emphasis on biological
-interpretability, statistical correctness, and reproducibility.
+The workflow demonstrates data acquisition, quality control, exploratory
+analysis, and statistical modelling using DESeq2, with an emphasis on
+biological interpretability, statistical validity, and reproducibility.
+
+Designed as a portfolio-grade analysis suitable for academic or industry review.
 
 ---
 
@@ -20,12 +21,13 @@ interpretability, statistical correctness, and reproducibility.
 - 484 samples (430 positive, 54 negative)
 
 **Subset used in this analysis:**
-- 30 SARS-CoV-2 positive samples  
-- 30 SARS-CoV-2 negative samples  
 
-A balanced subset was used to improve interpretability of PCA and
-differential expression results while reducing heterogeneity unrelated
-to the biological contrast of interest.
+To improve interpretability and reduce confounding heterogeneity,
+a balanced subset of samples was selected:
+
+- 30 SARS-CoV-2 positive
+- 30 SARS-CoV-2 negative
+
 
 ---
 
@@ -45,8 +47,8 @@ to the biological contrast of interest.
 - **03_deseq2.R**  
   Differential expression analysis using DESeq2
 
-- **04_pathways.R**  
-  Pathway enrichment analysis (KEGG / GO)
+- **04_volcano.R**  
+  Volcano plot highlighting key antiviral response genes
 
 ---
 
@@ -67,25 +69,54 @@ high-quality samples and genes suitable for count-based modelling.
 ### PCA of samples
 <img src="results/figures/pca_plot.png" width="600">
 
-Principal component analysis shows partial separation between
-SARS-CoV-2–positive and negative samples, indicating a condition-associated
-transcriptional signal beyond technical variation.
+Principal component analysis was performed on variance-stabilised
+expression values.
+
+- **PC1 (31% variance):** primary source of expression variability
+- **PC2 (22% variance):** secondary source of variability
+- Each point represents a sample, coloured by infection status
+
+Samples show partial separation by SARS-CoV-2 infection status along
+PC1, indicating a condition-associated transcriptional signal that
+exceeds technical variation but does not dominate all sources of
+variance.
+
 
 ---
 
 ### Library size QC
 <img src="results/figures/qc_library_size.png" width="550">
 
-Library sizes are broadly comparable across conditions, supporting the
-use of standard normalisation and downstream modelling assumptions.
+Each point represents a sample, with total sequencing depth shown on a
+log10 scale.
+
+- **y-axis:** total read counts per sample (library size)
+- **x-axis:** experimental condition
+
+Library sizes are broadly comparable between SARS-CoV-2 positive and
+negative samples, supporting the use of standard DESeq2 normalisation
+without additional depth-based correction.
+
 
 ---
 
 ### Differential expression (volcano)
 <img src="results/figures/volcano_plot.png" width="650">
 
-A small number of genes show large effect sizes with strong statistical
-support, consistent with a focused host transcriptional response.
+Each point represents a single gene.
+
+- **x-axis:** log2 fold change (SARS-CoV-2 positive vs negative)  
+  Positive values indicate higher expression in infected samples.
+- **y-axis:** −log10 adjusted p-value (Benjamini–Hochberg)  
+  Higher values indicate stronger statistical evidence for differential expression.
+
+Genes passing the significance threshold (adjusted p-value < 0.05 and
+|log2 fold change| > 1) are highlighted.
+
+A small number of genes exhibit both large effect sizes and strong statistical
+support, indicating a focused transcriptional response rather than
+global transcriptome-wide disruption.
+
 
 ---
 

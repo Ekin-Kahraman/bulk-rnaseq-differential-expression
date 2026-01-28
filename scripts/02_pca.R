@@ -1,49 +1,33 @@
-# Script: 02_pca.R
-# Purpose: PCA on variance-stabilised bulk RNA-seq data
-
-# PCA is used as an exploratory step to check:
-# - whether samples separate by biological condition
-# - whether any obvious outliers or structure remain after QC
-#
-# Variance-stabilised data are used so that highly expressed genes
-# do not dominate distance-based analyses.
+#!/usr/bin/env Rscript
+# PCA of variance-stabilized expression data
 
 library(DESeq2)
 library(ggplot2)
 
-# Load variance-stabilised dataset (generated in 01_qc.R)
-vst <- readRDS("data/vst_object.rds")
+vsd <- readRDS("data/vst_data.rds")
 
-# Run PCA using the most variable genes
-pca_data <- plotPCA(
-  vst,
-  intgroup = "condition",
-  returnData = TRUE
-)
+pca_data <- plotPCA(vsd, intgroup = "condition", returnData = TRUE)
+pct_var <- round(100 * attr(pca_data, "percentVar"))
 
-# Percentage variance explained by each component
-percent_var <- round(100 * attr(pca_data, "percentVar"))
-
-# Plot PCA
-p <- ggplot(
-  pca_data,
-  aes(PC1, PC2, color = condition)
-) +
-  geom_point(size = 3, alpha = 0.8) +
-  xlab(paste0("PC1: ", percent_var[1], "% variance")) +
-  ylab(paste0("PC2: ", percent_var[2], "% variance")) +
-  labs(
-    title = "PCA of variance-stabilised RNA-seq data",
-    color = "Condition"
+ggplot(pca_data, aes(PC1, PC2, color = condition)) +
+  geom_point(size = 3.5, alpha = 0.8) +
+  scale_color_manual(
+    values = c("negative" = "#3498db", "positive" = "#e74c3c"),
+    labels = c("Negative", "SARS-CoV-2")
   ) +
-  theme_minimal()
+  labs(
+    title = "Principal Component Analysis",
+    x = paste0("PC1 (", pct_var[1], "% variance)"),
+    y = paste0("PC2 (", pct_var[2], "% variance)"),
+    color = NULL
+  ) +
+  theme_classic(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    legend.position = "bottom"
+  )
 
-# Save figure
 dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
+ggsave("results/figures/pca_plot.png", width = 7, height = 6, dpi = 300)
 
-ggsave(
-  "results/figures/pca_plot.png",
-  plot = p,
-  width = 6,
-  height = 5
-)
+message("PC1: ", pct_var[1], "%, PC2: ", pct_var[2], "%")

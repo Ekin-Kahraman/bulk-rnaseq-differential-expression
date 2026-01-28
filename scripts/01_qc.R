@@ -1,124 +1,83 @@
-# Script: 01_qc.R
-# Purpose: Quality control and filtering of bulk RNA-seq data
-# Project: Bulk RNA-seq Differential Expression Analysis
-# Author: Ekin Kahraman
+#!/usr/bin/env Rscript
+# Quality control: filter samples and genes, normalize for visualization
 
-suppressPackageStartupMessages({
-  library(DESeq2)
-  library(edgeR)
-  library(ggplot2)
-})
+library(DESeq2)
+library(edgeR)
+library(ggplot2)
 
-# Load processed raw inputs
-counts   <- readRDS("data/counts_raw.rds")   # raw integer counts
-metadata <- readRDS("data/metadata.rds")     # sample metadata
+counts <- readRDS("data/counts_raw.rds")
+metadata <- readRDS("data/metadata.rds")
 
-# Basic integrity checks
-stopifnot(
-  is.matrix(counts),
-  storage.mode(counts) == "integer",
-  nrow(counts) > 0,
-  ncol(counts) > 0,
-  max(counts) > 0,
-  !any(is.na(counts)),
-  nrow(metadata) == ncol(counts),
-  all(colnames(counts) == rownames(metadata))
-)
+# Align samples
+metadata <- metadata[colnames(counts), , drop = FALSE]
 
-# Collapse duplicated gene identifiers by summing counts
-# (required for DESeq2 compatibility)
-if (any(duplicated(rownames(counts)))) {
-  counts <- rowsum(counts, group = rownames(counts))
-}
+message("Starting QC: ", nrow(counts), " genes, ", ncol(counts), " samples")
 
-stopifnot(
-  !any(duplicated(rownames(counts))),
-  nrow(counts) > 0
-)
+# Library size QC
+dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
 
-# Inspect library sizes
-library_sizes <- colSums(counts)
-
-qc_df <- data.frame(
-  sample    = colnames(counts),
-  library   = library_sizes,
+qc_data <- data.frame(
+  library_size = colSums(counts),
   condition = metadata$condition,
   stringsAsFactors = FALSE
 )
 
-dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
-
-p_libsize <- ggplot(qc_df, aes(x = condition, y = library)) +
-  geom_boxplot(outlier.shape = NA) +
+ggplot(qc_data, aes(condition, library_size)) +
+  geom_boxplot(outlier.shape = NA, fill = "grey85") +
   geom_jitter(width = 0.15, alpha = 0.6) +
-  scale_y_log10() +
-  labs(
-    title = "Library size distribution by condition",
-    y = "Total counts (log10)",
-    x = NULL
-  ) +
-  theme_minimal()
+  scale_y_log10(labels = scales::comma) +
+  labs(title = "Library Size Distribution", y = "Total Reads", x = NULL) +
+  theme_classic(base_size = 12)
 
-ggsave(
-  "results/figures/qc_library_size.png",
-  p_libsize,
-  width = 6,
-  height = 4
+ggsave("results/figures/qc_library_size.png", width = 6, height = 5, dpi = 300)
+
+# Remove low-depth samples
+keep <- qc_data$library_size > 1e5
+counts <- counts[, keep, drop = FALSE]
+metadata <- metadata[keep, , drop = FALSE]
+
+message(sum(keep), " samples passed QC")
+
+# Balance groups (optional - for cleaner signal)
+set.seed(123)
+n <- 30
+
+pos_samples <- rownames(metadata)[metadata$condition == "positive"]
+neg_samples <- rownames(metadata)[metadata$condition == "negative"]
+
+balanced <- c(
+  sample(pos_samples, min(n, length(pos_samples))),
+  sample(neg_samples, min(n, length(neg_samples)))
 )
 
-# Remove samples with zero total counts
-keep_samples <- library_sizes > 0
+counts <- counts[, balanced, drop = FALSE]
+metadata <- metadata[balanced, , drop = FALSE]
 
-counts   <- counts[, keep_samples, drop = FALSE]
-metadata <- metadata[keep_samples, , drop = FALSE]
+# Clean gene IDs (remove version numbers)
+rownames(counts) <- sub("\\..*", "", rownames(counts))
 
-stopifnot(
-  ncol(counts) > 0,
-  all(colSums(counts) > 0),
-  all(colnames(counts) == rownames(metadata))
-)
-
-# Filter lowly expressed genes using CPM
-# (raw counts retained for downstream modelling)
-cpm_mat <- edgeR::cpm(counts)
-
-keep_genes <- rowSums(cpm_mat >= 1) >= 10
-
-if (sum(keep_genes) == 0) {
-  stop("CPM filtering removed all genes — check thresholds.")
+# Collapse duplicate genes
+if (any(duplicated(rownames(counts)))) {
+  n_dup <- sum(duplicated(rownames(counts)))
+  counts <- rowsum(counts, rownames(counts))
+  message("Collapsed ", n_dup, " duplicates")
 }
 
-counts_filt <- counts[keep_genes, , drop = FALSE]
+# Filter lowly expressed genes (CPM-based)
+keep_genes <- rowSums(cpm(counts) >= 1) >= 10
+counts <- counts[keep_genes, , drop = FALSE]
 
-stopifnot(
-  nrow(counts_filt) > 0,
-  ncol(counts_filt) > 0,
-  max(counts_filt) > 0
-)
+message(nrow(counts), " genes retained after filtering")
+message("Final: ", sum(metadata$condition == "negative"), " neg, ",
+        sum(metadata$condition == "positive"), " pos")
 
-message(
-  "QC complete: retained ",
-  nrow(counts_filt), " genes across ",
-  ncol(counts_filt), " samples"
-)
+# Save filtered data
+saveRDS(counts, "data/counts_clean.rds")
+saveRDS(metadata, "data/metadata_clean.rds")
 
-# Save filtered raw counts
-saveRDS(counts_filt, "data/counts_clean.rds")
-saveRDS(metadata,    "data/metadata_clean.rds")
+# Variance stabilization for PCA
+dds <- DESeqDataSetFromMatrix(counts, metadata, design = ~ condition)
+vsd <- varianceStabilizingTransformation(dds, blind = TRUE)
+saveRDS(vsd, "data/vst_data.rds")
 
-# Variance stabilisation for exploratory analysis only
-metadata$condition <- factor(metadata$condition)
-
-dds_tmp <- DESeqDataSetFromMatrix(
-  countData = counts_filt,
-  colData   = metadata,
-  design    = ~ condition
-)
-
-dds_tmp <- dds_tmp[rowSums(counts(dds_tmp)) > 0, ]
-
-vsd <- varianceStabilizingTransformation(dds_tmp, blind = TRUE)
-
-saveRDS(vsd, "data/vst_object.rds")
-
-message("01_qc.R complete")
+message("QC complete")
