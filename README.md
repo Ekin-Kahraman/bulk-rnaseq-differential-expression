@@ -30,7 +30,6 @@ while reducing unnecessary heterogeneity.
 
 
 
-
 ### ANALYSIS WORKFLOW:
 
 scripts/  
@@ -51,6 +50,22 @@ After QC:
 
 14,744 genes  
 60 samples (30 positive / 30 negative)
+
+
+
+### BIOLOGICAL INTERPRETATION (SUMMARY):
+
+Principal component analysis of variance-stabilised expression data shows
+partial separation between SARS-CoV-2–positive and negative samples, indicating
+condition-associated transcriptional structure beyond technical variation.
+
+Differential expression analysis using DESeq2 identified ~136 genes with
+significant expression changes (FDR < 0.05) between conditions, consistent with
+a host transcriptional response to viral infection.
+
+Pathway enrichment analysis (KEGG / GO) is used to contextualise these gene-level
+changes at the systems level, highlighting immune- and antiviral-response
+processes characteristic of SARS-CoV-2 infection.
 
 
 
