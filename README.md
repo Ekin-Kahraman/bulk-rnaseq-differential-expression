@@ -68,15 +68,18 @@ changes at the systems level, highlighting immune- and antiviral-response
 processes characteristic of SARS-CoV-2 infection.
 
 
-![PCA Plot](./results/figures/pca_plot.png)
+## Key Results
 
-#### Differential Expression
-Using DESeq2, I identified significant expression changes consistent with a host antiviral response. The most strongly up-regulated genes in positive samples correspond to canonical **Interferon-Stimulated Genes (ISGs)** such as *ISG15*, *OAS1*, and *MX1*.
 
-![Volcano Plot](./results/figures/volcano_plot.png)
 
-*Volcano plot illustrating significant up-regulation (orange) of immune-response genes in infected samples (FDR < 0.05, |log2FC| > 1).*
+### PCA of samples
+![PCA plot](results/figures/pca_plot.png)
 
+### Library size QC
+![Library size QC](results/figures/qc_library_size.png)
+
+### Differential expression (volcano)
+![Volcano plot](results/figures/volcano_plot.png)
 
 
 
