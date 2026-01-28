@@ -1,29 +1,17 @@
-# 04_volcano.R
-# Volcano plot of differential expression
+#!/usr/bin/env Rscript
+# Volcano plot of differential expression results
 
 library(ggplot2)
 library(ggrepel)
 library(dplyr)
 
-# Load results - do NOT use row.names
 res <- read.csv("results/tables/deseq2_results.csv", stringsAsFactors = FALSE)
 
-cat("Loaded", nrow(res), "genes\n")
-cat("Columns:", paste(colnames(res), collapse = ", "), "\n")
-
-# Verify gene column exists
-if (!"gene" %in% colnames(res)) {
-  stop("ERROR: 'gene' column not found in results file")
-}
-
-# Check first few gene names
-cat("First genes:", paste(head(res$gene, 5), collapse = ", "), "\n")
-
-# Filter and classify
+# Classify genes
 res <- res %>%
   filter(!is.na(padj), !is.na(log2FoldChange)) %>%
   mutate(
-    category = case_when(
+    sig = case_when(
       padj >= 0.05 ~ "NS",
       log2FoldChange > 1 ~ "Up",
       log2FoldChange < -1 ~ "Down",
@@ -32,40 +20,31 @@ res <- res %>%
   )
 
 # Select top genes for labeling
-label_genes <- res %>%
+top_genes <- res %>%
   filter(padj < 0.001, abs(log2FoldChange) > 2) %>%
   arrange(padj) %>%
   head(10)
 
-cat("\nLabeling", nrow(label_genes), "genes:\n")
-print(label_genes$gene)
+message("Labeling ", nrow(top_genes), " genes: ", 
+        paste(top_genes$gene, collapse = ", "))
 
-# Volcano plot
-p <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj))) +
-  geom_point(
-    aes(color = category),
-    alpha = 0.6,
-    size = 1.8
-  ) +
+# Plot
+ggplot(res, aes(log2FoldChange, -log10(padj))) +
+  geom_point(aes(color = sig), alpha = 0.6, size = 1.8) +
   scale_color_manual(
-    values = c(
-      "Up" = "#e74c3c",
-      "Down" = "#3498db", 
-      "Marginal" = "#95a5a6",
-      "NS" = "grey80"
-    ),
+    values = c("Up" = "#e74c3c", "Down" = "#3498db", 
+               "Marginal" = "#95a5a6", "NS" = "grey80"),
     breaks = c("Up", "Down"),
     labels = c("Upregulated", "Downregulated")
   ) +
   geom_text_repel(
-    data = label_genes,
+    data = top_genes,
     aes(label = gene),
     size = 3.5,
     fontface = "italic",
     max.overlaps = 20,
     box.padding = 0.5,
-    segment.color = "grey50",
-    min.segment.length = 0
+    segment.color = "grey50"
   ) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey40") +
   geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "grey40") +
@@ -82,12 +61,13 @@ p <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj))) +
   )
 
 dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
-ggsave("results/figures/volcano_plot.png", p, width = 8, height = 7, dpi = 300)
+ggsave("results/figures/volcano_plot.png", width = 8, height = 7, dpi = 300)
 
+# Save top genes
 write.csv(
-  label_genes %>% select(gene, log2FoldChange, padj, baseMean),
-  "results/tables/top_volcano_genes.csv",
+  top_genes %>% select(gene, log2FoldChange, padj, baseMean),
+  "results/tables/top_genes.csv",
   row.names = FALSE
 )
 
-cat("\nVolcano plot saved\n")
+message("Volcano plot saved")

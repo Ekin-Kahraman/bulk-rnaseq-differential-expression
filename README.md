@@ -1,160 +1,153 @@
-# Bulk RNA-seq Differential Expression Analysis (R)
+# SARS-CoV-2 Differential Expression Analysis
 
-A reproducible, modular bulk RNA-seq differential expression pipeline in R.
-
-The workflow demonstrates data acquisition, quality control, exploratory
-analysis, and statistical modelling using DESeq2, with an emphasis on
-biological interpretability, statistical validity, and reproducibility.
-
-Designed as a portfolio-grade analysis suitable for academic or industry review.
-
----
+Bulk RNA-seq analysis pipeline identifying host transcriptional responses to SARS-CoV-2 infection using nasopharyngeal swab samples.
 
 ## Dataset
 
-- **Source:** NCBI GEO — [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075)
-- **Organism:** *Homo sapiens*
-- **Data type:** Bulk RNA-seq (raw counts)
-- **Biological context:** SARS-CoV-2 infection status
+**GEO Accession:** GSE152075  
+**Organism:** *Homo sapiens*  
+**Platform:** Illumina RNA-seq  
+**Samples:** 60 (30 positive, 30 negative)  
+**Tissue:** Nasopharyngeal swabs
 
-**Original dataset:**
-- 484 samples (430 positive, 54 negative)
+## Analysis Pipeline
 
-**Subset used in this analysis:**
+| Script | Purpose |
+|--------|---------|
+| `00_get_data.R` | Download raw counts and metadata from GEO |
+| `01_qc.R` | Library size QC, gene filtering, variance stabilization |
+| `02_pca.R` | Principal component analysis |
+| `03_deseq2.R` | Differential expression testing (negative binomial GLM) |
+| `04_volcano.R` | Volcano plot with top gene labels |
+| `05_model_diagnostics.R` | MA plot, dispersion plot, sample correlation, heatmaps |
+| `06_reproducibility.R` | Record package versions and session info |
 
-To improve interpretability and reduce confounding heterogeneity,
-a balanced subset of samples was selected:
+## Key Results
 
-- 30 SARS-CoV-2 positive
-- 30 SARS-CoV-2 negative
+**2,001 differentially expressed genes** (padj < 0.05):
+- 1,099 upregulated in SARS-CoV-2
+- 803 downregulated
 
+Top upregulated genes show strong interferon-stimulated gene (ISG) signature:
 
----
+- **IFIT1/2/3** - Interferon-induced proteins with tetratricopeptide repeats
+- **OAS3** - 2'-5'-Oligoadenylate synthetase 3 (antiviral enzyme)
+- **CXCL10** - C-X-C motif chemokine ligand 10 (inflammatory)
+- **DDX58** (RIG-I) - Viral RNA sensor
+- **GBP1** - Guanylate-binding protein 1
+- **XAF1** - XIAP-associated factor 1
+- **SIGLEC1** - Sialic acid-binding Ig-like lectin 1
 
-## Analysis workflow
+These results are consistent with canonical type I/II interferon responses to viral infection.
 
-`scripts/`
+## Quality Control
 
-- **00_get_data.R**  
-  Download GEO data and construct a balanced case–control subset
+All diagnostic plots confirm robust analysis:
 
-- **01_qc.R**  
-  Library size QC, CPM-based gene filtering, variance stabilisation
+1. **MA Plot** - Log fold changes are independent of mean expression
+2. **Dispersion Plot** - Gene-wise dispersion estimates fit the mean-dispersion relationship
+3. **Sample Correlation** - Samples cluster by infection status, not technical artifacts
+4. **PCA** - PC1 captures 33% variance, separating positive/negative samples
+5. **Top Genes Heatmap** - Top 50 DE genes show clear condition-specific expression
 
-- **02_pca.R**  
-  PCA of variance-stabilised expression data
+## Usage
 
-- **03_deseq2.R**  
-  Differential expression analysis using DESeq2
+```bash
+# Run complete pipeline
+Rscript scripts/00_get_data.R
+Rscript scripts/01_qc.R
+Rscript scripts/02_pca.R
+Rscript scripts/03_deseq2.R
+Rscript scripts/04_volcano.R
+Rscript scripts/05_model_diagnostics.R
+Rscript scripts/06_reproducibility.R
+```
 
-- **04_volcano.R**  
-  Volcano plot highlighting key antiviral response genes
+Or in R:
+```r
+scripts <- c(
+  "00_get_data.R",
+  "01_qc.R",
+  "02_pca.R",
+  "03_deseq2.R",
+  "04_volcano.R",
+  "05_model_diagnostics.R",
+  "06_reproducibility.R"
+)
 
----
+for (script in scripts) {
+  message("Running: ", script)
+  source(file.path("scripts", script))
+}
+```
 
-## Quality control summary
+## Output Structure
 
-- Failed libraries removed
-- Library sizes inspected across conditions
-- Genes retained based on CPM filtering
-- Variance stabilising transformation used for exploratory analysis only
+```
+results/
+├── figures/
+│   ├── qc_library_size.png
+│   ├── pca_plot.png
+│   ├── pca_variance.png
+│   ├── volcano_plot.png
+│   ├── ma_plot.png
+│   ├── dispersion_plot.png
+│   ├── sample_correlation.png
+│   └── top_genes_heatmap.png
+├── tables/
+│   ├── deseq2_results.csv
+│   └── top_genes.csv
+└── session_info.txt
+```
 
-The final dataset used for differential expression consists of
-high-quality samples and genes suitable for count-based modelling.
+## Statistical Methods
 
----
+- **Normalization:** DESeq2 median-of-ratios
+- **Dispersion estimation:** Gene-wise estimates with empirical Bayes shrinkage
+- **Testing:** Wald test for differential expression
+- **Multiple testing correction:** Benjamini-Hochberg FDR (padj < 0.05)
+- **Variance stabilization:** `varianceStabilizingTransformation()` for exploratory analysis
+- **Outlier handling:** Cook's distance filtering with automatic refitting
 
-## Key results
+## Filtering Criteria
 
-### PCA of samples
-<img src="results/figures/pca_plot.png" width="600">
-
-Principal component analysis was performed on variance-stabilised
-expression values.
-
-- **PC1 (31% variance):** primary source of expression variability
-- **PC2 (22% variance):** secondary source of variability
-- Each point represents a sample, coloured by infection status
-
-Samples show partial separation by SARS-CoV-2 infection status along
-PC1, indicating a condition-associated transcriptional signal that
-exceeds technical variation but does not dominate all sources of
-variance.
-
-
----
-
-### Library size QC
-<img src="results/figures/qc_library_size.png" width="550">
-
-Each point represents a sample, with total sequencing depth shown on a
-log10 scale.
-
-- **y-axis:** total read counts per sample (library size)
-- **x-axis:** experimental condition
-
-Library sizes are broadly comparable between SARS-CoV-2 positive and
-negative samples, supporting the use of standard DESeq2 normalisation
-without additional depth-based correction.
-
-
----
-
-### Differential expression (volcano)
-<img src="results/figures/volcano_plot.png" width="650">
-
-Each point represents a single gene.
-
-- **x-axis:** log2 fold change (SARS-CoV-2 positive vs negative)  
-  Positive values indicate higher expression in infected samples.
-- **y-axis:** −log10 adjusted p-value (Benjamini–Hochberg)  
-  Higher values indicate stronger statistical evidence for differential expression.
-
-Genes passing the significance threshold (adjusted p-value < 0.05 and
-|log2 fold change| > 1) are highlighted.
-
-A small number of genes exhibit both large effect sizes and strong statistical
-support, indicating a focused transcriptional response rather than
-global transcriptome-wide disruption.
-
-
----
-
-## Gene-level interpretation
-
-The most strongly up-regulated genes in SARS-CoV-2–positive samples are
-consistent with a canonical interferon-mediated antiviral response.
-
-Several top-ranked signals correspond to interferon-stimulated genes
-(ISGs), including members of the **ISG**, **OAS**, and **MX** gene families,
-which are known to restrict viral replication and amplify innate immune
-signalling.
-
-This pattern indicates that the dominant signal in the data reflects
-host immune activation rather than batch or technical artefacts.
-
----
+- **Sample QC:** Library size > 100,000 reads
+- **Gene filtering:** CPM ≥ 1 in at least 10 samples
+- **Balanced design:** 30 samples per condition (random sampling from available)
 
 ## Requirements
 
-- R ≥ 4.2
-- GEOquery
-- DESeq2
-- edgeR
-- tidyverse
-- ggplot2
-- pheatmap
+- R ≥ 4.0
+- Bioconductor: DESeq2, edgeR, GEOquery
+- CRAN: ggplot2, ggrepel, dplyr, pheatmap
 
----
+Install with:
+```r
+if (!require("BiocManager")) install.packages("BiocManager")
+BiocManager::install(c("DESeq2", "edgeR", "GEOquery"))
+install.packages(c("ggplot2", "ggrepel", "dplyr", "pheatmap"))
+```
 
 ## Reproducibility
 
-Run the analysis end-to-end from the project root:
+Package versions and system information are recorded in `results/session_info.txt` after running `06_reproducibility.R`.
 
-```r
-source("scripts/00_get_data.R")
-source("scripts/01_qc.R")
-source("scripts/02_pca.R")
-source("scripts/03_deseq2.R")
-source("scripts/04_volcano.R")
+## Biological Interpretation
 
+The dominant transcriptional signature is upregulation of interferon-stimulated genes (ISGs), consistent with innate antiviral immunity. Key pathways include:
+
+1. **Pattern recognition:** DDX58 (RIG-I) detects viral RNA
+2. **Interferon signaling:** IFIT family proteins inhibit translation
+3. **Antiviral enzymes:** OAS3 activates RNase L to degrade viral RNA
+4. **Immune recruitment:** CXCL10 attracts T cells and NK cells
+5. **Monocyte activation:** SIGLEC1 (CD169) marks activated monocytes
+
+This response is protective but can contribute to inflammation in severe COVID-19.
+
+## Author
+
+Ekin Kahraman
+
+## License
+
+Data from GEO accession GSE152075. Analysis code available for educational use.
