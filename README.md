@@ -79,7 +79,7 @@ processes characteristic of SARS-CoV-2 infection.
 ![Library size QC](results/figures/qc_library_size.png)
 
 ### Differential expression (volcano)
-![Volcano plot](results/figures/volcano_plot.png)
+![Volcano plot](results/figures/volcano_plot.Png)
 
 
 
