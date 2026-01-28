@@ -68,17 +68,17 @@ changes at the systems level, highlighting immune- and antiviral-response
 processes characteristic of SARS-CoV-2 infection.
 
 
-![PCA Plot](figures/pca_plot.png)
+![PCA Plot](results/figures/pca_plot.png)
 
 *Principal component analysis of variance-stabilised expression data shows partial
 separation between SARS-CoV-2–positive and negative samples, indicating that infection
-status contributes meaningfully to global transcriptional variation beyond technical noise.*
+status contributes meaningfully to global transcriptional variation.*
 
-![Volcano Plot](figures/volcano_plot.png)
+![Volcano Plot](results/figures/volcano_plot.png)
 
 *Volcano plot of differential expression results (DESeq2). Significantly altered genes
 (FDR < 0.05) show strong up-regulation of antiviral and interferon-associated genes in
-SARS-CoV-2–positive samples, consistent with a host innate immune response to infection.*
+SARS-CoV-2–positive samples, consistent with a host innate immune response.*
 
 
 
