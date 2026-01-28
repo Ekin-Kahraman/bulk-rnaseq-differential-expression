@@ -35,18 +35,22 @@ getGEOSuppFiles(
 )
 
 # ------------------------------------------------------------
-# 4. Locate count matrix file
+# 4. Locate raw count matrix file (ROBUST)
 # ------------------------------------------------------------
 
 count_files <- list.files(
   path = file.path("data/raw", geo_accession),
-  pattern = "txt|tsv|counts",
+  pattern = "raw_counts.*\\.txt(\\.gz)?$",
   full.names = TRUE
 )
 
-stopifnot(length(count_files) == 1)
+stopifnot(length(count_files) >= 1)
 
+# If multiple matches exist, take the first deterministically
 count_file <- count_files[1]
+
+message("Using count file: ", basename(count_file))
+
 
 # ------------------------------------------------------------
 # 5. Read raw count matrix
