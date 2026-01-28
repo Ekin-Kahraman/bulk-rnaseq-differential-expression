@@ -5,22 +5,28 @@
 # Author: Ekin Kahraman
 # ============================================================
 
-# ---- 1. Load required libraries ----
-# GEOquery: access GEO datasets
-# tidyverse: data manipulation
-library(GEOquery)
-library(readr)
-library(dplyr)
-library(tibble)
+suppressPackageStartupMessages({
+  library(GEOquery)
+  library(dplyr)
+  library(tibble)
+})
 
-# ---- 2. Define GEO accession ----
+# ------------------------------------------------------------
+# 1. GEO accession
+# ------------------------------------------------------------
+
 geo_accession <- "GSE152075"
 
-# ---- 3. Create directory structure ----
-dir.create("data/raw", recursive = TRUE, showWarnings = FALSE)
+# ------------------------------------------------------------
+# 2. Directory structure
+# ------------------------------------------------------------
 
-# ---- 4. Download supplementary files (raw counts) ----
-# GEO supplementary files contain the author-provided count matrix
+dir.create("data/raw", recursive = TRUE, showWarnings = FALSE)
+dir.create("data", recursive = TRUE, showWarnings = FALSE)
+
+# ------------------------------------------------------------
+# 3. Download supplementary files (raw counts)
+# ------------------------------------------------------------
 
 getGEOSuppFiles(
   geo_accession,
@@ -28,8 +34,9 @@ getGEOSuppFiles(
   baseDir = "data/raw"
 )
 
-# ---- 5. Locate downloaded count file ----
-# We expect a single space-delimited count matrix
+# ------------------------------------------------------------
+# 4. Locate count matrix file
+# ------------------------------------------------------------
 
 count_files <- list.files(
   path = file.path("data/raw", geo_accession),
@@ -38,15 +45,15 @@ count_files <- list.files(
 )
 
 stopifnot(length(count_files) == 1)
-count_files
 
-# ---- 6. Read raw count matrix (robust parsing) ----
-# Rationale:
-# GEO count files may contain mixed types or inconsistent delimiters.
-# We explicitly parse gene IDs and coerce all count columns to numeric.
+count_file <- count_files[1]
 
-counts_raw <- read.table(
-  count_files,
+# ------------------------------------------------------------
+# 5. Read raw count matrix
+# ------------------------------------------------------------
+
+counts_df <- read.table(
+  count_file,
   header = TRUE,
   sep = "",
   stringsAsFactors = FALSE,
@@ -54,65 +61,116 @@ counts_raw <- read.table(
   comment.char = ""
 )
 
-# First column = gene identifiers
-gene_ids <- counts_raw[[1]]
+# First column = gene IDs
+gene_ids <- counts_df[[1]]
 
 # Remaining columns = counts
-counts_mat <- counts_raw[, -1]
+counts_raw <- counts_df[, -1]
+counts_raw[] <- lapply(counts_raw, as.numeric)
 
-# Force numeric conversion (introduces NA if parsing failed)
-counts_mat[] <- lapply(counts_mat, function(x) as.numeric(x))
+counts_raw <- as.matrix(counts_raw)
+rownames(counts_raw) <- gene_ids
 
-# Convert to matrix
-counts_mat <- as.matrix(counts_mat)
-rownames(counts_mat) <- gene_ids
+# ------------------------------------------------------------
+# 6. Remove genes with parsing failures
+# ------------------------------------------------------------
 
-# ---- 7. Remove genes with parsing failures ----
-# Genes with any NA values are removed entirely
-na_genes <- rowSums(is.na(counts_mat)) > 0
-sum(na_genes)  # diagnostic
+bad_genes <- rowSums(is.na(counts_raw)) > 0
+counts_raw <- counts_raw[!bad_genes, , drop = FALSE]
 
-counts_mat <- counts_mat[!na_genes, ]
+# ------------------------------------------------------------
+# 7. Enforce integer raw counts (safely)
+# ------------------------------------------------------------
 
-# ---- 8. Enforce raw integer counts ----
-mode(counts_mat) <- "integer"
+if (any(abs(counts_raw - round(counts_raw)) > 1e-6)) {
+  stop("Non-integer values detected: input is NOT raw counts")
+}
+storage.mode(counts_raw) <- "integer"
 
-# ---- 9. Sanity checks ----
+# ------------------------------------------------------------
+# 8. Basic sanity checks
+# ------------------------------------------------------------
+
 stopifnot(
-  all(counts_mat >= 0),
-  all(colSums(counts_mat) > 0)
+  nrow(counts_raw) > 0,
+  ncol(counts_raw) > 0,
+  max(counts_raw) > 0,
+  all(colSums(counts_raw) > 0)
 )
 
-# ---- 10. Save clean raw count matrix ----
-saveRDS(counts_mat, "data/counts.rds")
+# ------------------------------------------------------------
+# 9. Infer condition directly from column names (ROBUST)
+# ------------------------------------------------------------
 
+sample_names <- colnames(counts_raw)
 
-# Save frozen counts
-saveRDS(count_matrix, "data/counts.rds")
+# Inspect once (debug)
+# head(sample_names)
 
-# ---- 11. Create minimal metadata table ----
-# Only variables required for downstream modelling are retained
-
-metadata <- tibble(
-  sample_id = colnames(count_matrix),
-  condition = if_else(
-    sample_id %in% pos_keep,
-    "SARS_CoV_2_positive",
-    "SARS_CoV_2_negative"
+condition <- ifelse(
+  grepl("covid|sars|positive|pos", sample_names, ignore.case = TRUE),
+  "positive",
+  ifelse(
+    grepl("control|negative|neg|healthy", sample_names, ignore.case = TRUE),
+    "negative",
+    NA
   )
 )
 
-write_csv(metadata, "data/metadata.csv")
+# Drop samples with unknown status
+keep <- !is.na(condition)
 
-# ---- 12. Final sanity checks ----
-dim(count_matrix)
-table(metadata$condition)
+counts_labeled <- counts_raw[, keep, drop = FALSE]
+condition <- condition[keep]
+sample_names <- sample_names[keep]
 
-# ---- Final dataset summary (FROZEN) ----
-# 35,784 genes × 60 samples
-# 30 SARS-CoV-2 positive
-# 30 SARS-CoV-2 negative
-#
-# This balanced subset was constructed from a larger public GEO dataset
-# to maximise interpretability, statistical comparability, and downstream
-# QC/DE clarity for a portfolio-grade bulk RNA-seq analysis.
+table(condition)  # SHOULD SHOW ~430 positive / ~54 negative
+
+# ------------------------------------------------------------
+# 10. Construct balanced subset (30 / 30)
+# ------------------------------------------------------------
+
+set.seed(42)
+
+pos_idx <- which(condition == "positive")
+neg_idx <- which(condition == "negative")
+
+stopifnot(
+  length(pos_idx) >= 30,
+  length(neg_idx) >= 30
+)
+
+pos_keep <- sample(pos_idx, 30)
+neg_keep <- sample(neg_idx, 30)
+
+keep_idx <- c(pos_keep, neg_keep)
+
+counts_bal <- counts_labeled[, keep_idx, drop = FALSE]
+
+metadata <- data.frame(
+  condition = condition[keep_idx],
+  row.names = colnames(counts_bal),
+  stringsAsFactors = FALSE
+)
+
+# ------------------------------------------------------------
+# 11. Final sanity checks
+# ------------------------------------------------------------
+
+stopifnot(
+  ncol(counts_bal) == 60,
+  nrow(metadata) == 60,
+  all(colnames(counts_bal) == rownames(metadata)),
+  max(counts_bal) > 0
+)
+
+# ------------------------------------------------------------
+# 12. Save frozen raw data
+# ------------------------------------------------------------
+
+saveRDS(counts_bal, "data/counts_raw.rds")
+saveRDS(metadata,    "data/metadata.rds")
+
+message("00_get_data.R complete")
+message("Genes: ", nrow(counts_bal), " | Samples: ", ncol(counts_bal))
+
