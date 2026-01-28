@@ -1,48 +1,75 @@
 # ============================================================
 # Script: 01_qc.R
-# Purpose: Quality control and initial exploration of bulk RNA-seq data
+# Purpose: Quality control and filtering of bulk RNA-seq data
 # Project: Bulk RNA-seq Differential Expression Analysis
 # Author: Ekin Kahraman
-# Date: 2026-01-25
 # ============================================================
 
-# ---- 1. Load required libraries ----
-library(DESeq2)
-library(edgeR)
-library(ggplot2)
-library(readr)
-library(dplyr)
-library(tibble)
+suppressPackageStartupMessages({
+  library(DESeq2)
+  library(edgeR)
+  library(ggplot2)
+})
 
-# ---- 2. Load frozen inputs ----
-# These objects are produced by 00_get_data.R and are treated as immutable
+# ------------------------------------------------------------
+# 1. Load frozen inputs (AUTHORITATIVE)
+# ------------------------------------------------------------
 
-counts   <- readRDS("data/counts.rds")
-metadata <- read_csv("data/metadata.csv", show_col_types = FALSE)
+counts   <- readRDS("data/counts_raw.rds")   # raw integer counts
+metadata <- readRDS("data/metadata.rds")     # rownames = sample IDs
 
-# Sanity check: initial alignment
-stopifnot(all(colnames(counts) == metadata$sample_id))
+# ------------------------------------------------------------
+# 2. HARD INVARIANTS (fail fast)
+# ------------------------------------------------------------
 
-# ---- 3. Library size QC (pre-cleaning) ----
+stopifnot(
+  is.matrix(counts),
+  storage.mode(counts) == "integer",
+  nrow(counts) > 0,
+  ncol(counts) > 0,
+  max(counts) > 0,
+  !any(is.na(counts)),
+  nrow(metadata) == ncol(counts),
+  all(colnames(counts) == rownames(metadata))
+)
+
+# ------------------------------------------------------------
+# 3. COLLAPSE DUPLICATE GENE IDS (CRITICAL FIX)
+# ------------------------------------------------------------
 # Rationale:
-# Large differences in sequencing depth can indicate technical artefacts.
-# We inspect library sizes before any filtering or modelling decisions.
+# Author-provided count matrices often contain duplicate gene identifiers
+# (e.g. multiple transcripts mapping to the same gene).
+# DESeq2 requires unique rownames.
+# We collapse duplicates at the gene level by summing counts.
+
+if (any(duplicated(rownames(counts)))) {
+  counts <- rowsum(counts, group = rownames(counts))
+}
+
+# Sanity check post-collapse
+stopifnot(
+  !any(duplicated(rownames(counts))),
+  nrow(counts) > 0
+)
+
+# ------------------------------------------------------------
+# 4. Library size QC (pre-filtering)
+# ------------------------------------------------------------
 
 library_sizes <- colSums(counts)
 
-qc_libsize <- tibble(
-  sample_id = names(library_sizes),
-  library_size = library_sizes,
-  condition = metadata$condition
-) %>%
-  filter(library_size > 0)
-
+qc_df <- data.frame(
+  sample    = colnames(counts),
+  library   = library_sizes,
+  condition = metadata$condition,
+  stringsAsFactors = FALSE
+)
 
 dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
 
-p_libsize <- ggplot(qc_libsize, aes(x = condition, y = library_size)) +
+p_libsize <- ggplot(qc_df, aes(x = condition, y = library)) +
   geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.2, alpha = 0.6) +
+  geom_jitter(width = 0.15, alpha = 0.6) +
   scale_y_log10() +
   labs(
     title = "Library size distribution by condition",
@@ -52,100 +79,80 @@ p_libsize <- ggplot(qc_libsize, aes(x = condition, y = library_size)) +
   theme_minimal()
 
 ggsave(
-  filename = "results/figures/qc_library_size.png",
-  plot     = p_libsize,
-  width    = 6,
-  height   = 4
+  "results/figures/qc_library_size.png",
+  p_libsize,
+  width = 6,
+  height = 4
 )
 
-# ---- 4. Remove invalid sample columns (FAILED LIBRARIES) ----
-# Rationale:
-# CPM, PCA, and DESeq2 require numeric count matrices with no NA values.
-# Any sample that is entirely NA or has zero total counts is a failed library
-# and must be removed (not imputed).
+# ------------------------------------------------------------
+# 5. Remove failed libraries (zero-count samples)
+# ------------------------------------------------------------
 
-counts <- as.matrix(counts)
+keep_samples <- library_sizes > 0
 
-# Identify samples containing ANY NA values
-na_cols <- colSums(is.na(counts)) > 0
+counts   <- counts[, keep_samples, drop = FALSE]
+metadata <- metadata[keep_samples, , drop = FALSE]
 
-if (any(na_cols)) {
-  bad_samples <- colnames(counts)[na_cols]
-  counts   <- counts[, !na_cols, drop = FALSE]
-  metadata <- metadata %>% filter(!sample_id %in% bad_samples)
-}
-
-# Recompute library sizes after NA-column removal
-library_sizes <- colSums(counts)
-
-# Identify zero-library samples
-zero_cols <- library_sizes == 0
-
-if (any(zero_cols)) {
-  bad_samples <- colnames(counts)[zero_cols]
-  counts   <- counts[, !zero_cols, drop = FALSE]
-  metadata <- metadata %>% filter(!sample_id %in% bad_samples)
-}
-
-# Re-align metadata order to count columns (CRITICAL)
-metadata <- metadata %>% slice(match(colnames(counts), sample_id))
-
-# Hard invariants (fail fast if violated)
-stopifnot(!any(is.na(counts)))
-stopifnot(all(colnames(counts) == metadata$sample_id))
-stopifnot(all(colSums(counts) > 0))
-
-# ---- 5. Low-expression gene filtering (CPM-based) ----
-# Rationale:
-# In deeply sequenced datasets, raw-count thresholds are insufficient.
-# We retain genes with CPM ≥ 1 in at least 10 samples, a standard bulk RNA-seq filter.
-
-cpm_values <- cpm(counts)
-
-keep_genes <- rowSums(cpm_values >= 1) >= 10
-counts_filtered <- counts[keep_genes, , drop = FALSE]
-
-n_before <- nrow(counts)
-n_after  <- nrow(counts_filtered)
-
-n_before
-n_after
-
-
-# ---- QC summary ----
-# One failed library was removed due to NA / zero counts.
-# CPM-based filtering retained ~14,744 expressed genes across 59 samples.
-# Dataset passes QC and is suitable for PCA and DE analysis.
-
-
-# ---- 6. Ensure correct data types for DESeq2 ----
-# Rationale:
-# DESeq2 requires integer counts and categorical design variables.
-
-metadata$condition <- factor(
-  metadata$condition,
-  levels = c("SARS_CoV_2_negative", "SARS_CoV_2_positive")
+stopifnot(
+  ncol(counts) > 0,
+  all(colSums(counts) > 0),
+  all(colnames(counts) == rownames(metadata))
 )
 
-mode(counts_filtered) <- "integer"
+# ------------------------------------------------------------
+# 6. Low-expression gene filtering (CPM-based)
+# ------------------------------------------------------------
+# Decisions are made on CPM, but RAW counts are retained
 
-# Final sanity checks before modelling
-stopifnot(nrow(counts_filtered) > 0)
-stopifnot(all(colSums(counts_filtered) > 0))
+cpm_mat <- edgeR::cpm(counts)
 
-# ---- 7. Variance stabilisation (for PCA / visualisation) ----
-# Rationale:
-# PCA assumes approximately homoscedastic data.
-# Variance stabilising transformation corrects mean–variance dependence
-# while preserving sample relationships.
+keep_genes <- rowSums(cpm_mat >= 1) >= 10
 
-dds <- DESeqDataSetFromMatrix(
-  countData = counts_filtered,
+if (sum(keep_genes) == 0) {
+  stop("CPM filtering removed all genes — check thresholds.")
+}
+
+counts_filt <- counts[keep_genes, , drop = FALSE]
+
+stopifnot(
+  nrow(counts_filt) > 0,
+  ncol(counts_filt) > 0,
+  max(counts_filt) > 0
+)
+
+message(
+  "QC filtering complete: retained ",
+  nrow(counts_filt), " genes across ",
+  ncol(counts_filt), " samples"
+)
+
+# ------------------------------------------------------------
+# 7. Save CLEAN RAW counts for DESeq2
+# ------------------------------------------------------------
+
+dir.create("data", recursive = TRUE, showWarnings = FALSE)
+
+saveRDS(counts_filt, "data/counts_clean.rds")
+saveRDS(metadata,    "data/metadata_clean.rds")
+
+# ------------------------------------------------------------
+# 8. Variance stabilisation (for PCA / visualisation ONLY)
+# ------------------------------------------------------------
+
+metadata$condition <- factor(metadata$condition)
+
+dds_tmp <- DESeqDataSetFromMatrix(
+  countData = counts_filt,
   colData   = metadata,
   design    = ~ condition
 )
 
-vsd <- vst(dds, blind = TRUE)
+dds_tmp <- dds_tmp[rowSums(counts(dds_tmp)) > 0, ]
 
-# Save transformed object for reuse
+vsd <- varianceStabilizingTransformation(dds_tmp, blind = TRUE)
+
+
 saveRDS(vsd, "data/vst_object.rds")
+
+message("01_qc.R complete")
