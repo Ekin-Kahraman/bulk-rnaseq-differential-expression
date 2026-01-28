@@ -18,6 +18,32 @@ Differential expression analysis of nasopharyngeal swab RNA-seq data comparing S
 - **Analysis subset:** 60 samples (30 positive, 30 negative; balanced)
 
 
+## Exploratory Analysis and Key Visualizations
+
+### Library Size Quality Control
+
+<img src="results/figures/qc_library_size.png" width="520">
+
+*Distribution of total read counts across samples after initial quality control, showing comparable library sizes between SARS-CoV-2 positive and negative groups.*
+
+---
+
+### Principal Component Analysis (PCA)
+
+<img src="results/figures/pca_plot.png" width="560">
+
+*Principal component analysis of variance-stabilised expression values from a balanced subset of 60 samples (30 SARS-CoV-2 positive, 30 negative). Partial separation by infection status indicates a condition-associated transcriptional signal beyond technical variation.*
+
+---
+
+### Differential Expression Analysis
+
+<img src="results/figures/volcano_plot.png" width="600">
+
+*Volcano plot summarising differential gene expression between SARS-CoV-2 positive and negative samples. Genes with large effect sizes and strong statistical support are highlighted, consistent with an interferon-mediated antiviral response.*
+
+
+
 
 
 ## Project Structure
