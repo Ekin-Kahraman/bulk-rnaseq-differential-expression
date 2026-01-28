@@ -40,68 +40,52 @@ count_files <- list.files(
 stopifnot(length(count_files) == 1)
 count_files
 
-# ---- 6. Read raw count matrix ----
-# Expectation:
-# - first column = gene identifiers
-# - remaining columns = sample counts
+# ---- 6. Read raw count matrix (robust parsing) ----
+# Rationale:
+# GEO count files may contain mixed types or inconsistent delimiters.
+# We explicitly parse gene IDs and coerce all count columns to numeric.
 
-counts_raw <- read_delim(
+counts_raw <- read.table(
   count_files,
-  delim = " ",
-  col_names = TRUE,
-  trim_ws = TRUE,
-  show_col_types = FALSE
+  header = TRUE,
+  sep = "",
+  stringsAsFactors = FALSE,
+  check.names = FALSE,
+  comment.char = ""
 )
 
-# Inspect structure after parsing
-dim(counts_raw)
-head(counts_raw[, 1:6])
+# First column = gene identifiers
+gene_ids <- counts_raw[[1]]
 
-# ---- 7. Fetch GEO sample metadata ----
-# Purpose: identify experimental conditions for subsetting
+# Remaining columns = counts
+counts_mat <- counts_raw[, -1]
 
-gse <- getGEO(geo_accession, GSEMatrix = TRUE)
-stopifnot(length(gse) == 1)
+# Force numeric conversion (introduces NA if parsing failed)
+counts_mat[] <- lapply(counts_mat, function(x) as.numeric(x))
 
-meta <- pData(gse[[1]])
+# Convert to matrix
+counts_mat <- as.matrix(counts_mat)
+rownames(counts_mat) <- gene_ids
 
-# ---- Decision log: dataset subset for CV-grade analysis ----
-# GEO metadata shows strong class imbalance (pos=430, neg=54; all Homo sapiens).
-# Analysing all 484 samples would introduce unnecessary heterogeneity and batch
-# structure without increasing the signal a reviewer cares about.
-# We therefore construct a balanced 2-condition subset (n=30/30) to maximise
-# interpretability, statistical comparability, and interview explainability.
+# ---- 7. Remove genes with parsing failures ----
+# Genes with any NA values are removed entirely
+na_genes <- rowSums(is.na(counts_mat)) > 0
+sum(na_genes)  # diagnostic
 
-# ---- 8. Select balanced subset of samples (POS IDs) ----
-set.seed(42)
+counts_mat <- counts_mat[!na_genes, ]
 
-neg_samples <- meta$title[meta$`sars-cov-2 positivity:ch1` == "neg"]
-pos_samples <- meta$title[meta$`sars-cov-2 positivity:ch1` == "pos"]
+# ---- 8. Enforce raw integer counts ----
+mode(counts_mat) <- "integer"
 
-neg_keep <- sample(neg_samples, 30)
-pos_keep <- sample(pos_samples, 30)
+# ---- 9. Sanity checks ----
+stopifnot(
+  all(counts_mat >= 0),
+  all(colSums(counts_mat) > 0)
+)
 
-selected_samples <- c(neg_keep, pos_keep)
-stopifnot(length(selected_samples) == 60)
+# ---- 10. Save clean raw count matrix ----
+saveRDS(counts_mat, "data/counts.rds")
 
-# ---- 9. Subset count matrix to selected samples ----
-
-common_samples <- intersect(selected_samples, colnames(counts_raw))
-stopifnot(length(common_samples) == 60)
-
-counts_subset <- counts_raw %>%
-  select(1, all_of(common_samples))
-
-dim(counts_subset)
-
-# ---- 10. Finalise count matrix ----
-# Convert to numeric gene × sample matrix
-
-gene_ids <- counts_subset[[1]]
-count_matrix <- as.matrix(counts_subset[, -1])
-
-rownames(count_matrix) <- gene_ids
-mode(count_matrix) <- "numeric"
 
 # Save frozen counts
 saveRDS(count_matrix, "data/counts.rds")
