@@ -67,6 +67,21 @@ Pathway enrichment analysis (KEGG / GO) is used to contextualise these gene-leve
 changes at the systems level, highlighting immune- and antiviral-response
 processes characteristic of SARS-CoV-2 infection.
 
+
+![PCA Plot](results/figures/pca_plot.png)
+
+*Principal component analysis of variance-stabilised expression data shows partial
+separation between SARS-CoV-2–positive and negative samples, indicating
+condition-associated transcriptional structure beyond technical variation.*
+
+![Volcano Plot](results/figures/volcano_plot.png)
+
+*Volcano plot of differential expression results (DESeq2). Orange points indicate
+significantly differentially expressed genes (FDR < 0.05), highlighting a strong
+host antiviral transcriptional response to SARS-CoV-2 infection.*
+
+
+
 ### KEY RESULTS (GENE-LEVEL):
 
 A volcano plot of differential expression highlights a small number of genes with
