@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# Volcano plot of differential expression results
+# Volcano plot visualisation of differential expression results
 
 library(ggplot2)
 library(ggrepel)
@@ -19,13 +19,13 @@ res <- res %>%
     )
   )
 
-# Select top genes for labeling
+# Select top genes for labelling (visual clarity threshold)
 top_genes <- res %>%
   filter(padj < 0.001, abs(log2FoldChange) > 2) %>%
   arrange(padj) %>%
   head(10)
 
-message("Labeling ", nrow(top_genes), " genes: ", 
+message("Labelling ", nrow(top_genes), " genes: ", 
         paste(top_genes$gene, collapse = ", "))
 
 # Plot
