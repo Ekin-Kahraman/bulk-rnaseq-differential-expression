@@ -54,10 +54,12 @@ ggplot() +
   theme(
     plot.title = element_text(face = "bold", hjust = 0.5, size = 14),
     plot.subtitle = element_text(hjust = 0.5, color = "grey40", size = 10),
-    plot.margin = margin(20, 20, 20, 20)
+    plot.margin = margin(20, 20, 20, 20),
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA)
   ) +
   coord_cartesian(xlim = c(0, 8), ylim = c(0, 11.5))
 
-ggsave("results/figures/pathway_diagram.png", width = 10, height = 8, dpi = 300)
+ggsave("results/figures/pathway_diagram.png", width = 10, height = 8, dpi = 300, bg = "white")
 
 message("Pathway diagram saved")
