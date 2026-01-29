@@ -40,23 +40,21 @@ Balanced subset controls for class imbalance and viral load heterogeneity. Subsa
 
 ### Quality Control
 
-![Library Size Distribution](results/figures/qc_library_size.png "Library sizes comparable between groups")
+<img src="results/figures/qc_library_size.png" width="450" alt="Library Size Distribution">
 
 Library sizes comparable between groups (median ~2M reads), supporting robust normalisation.
 
 ### Principal Component Analysis
 
-![PCA Plot](results/figures/pca_plot.png "PCA of VST-transformed expression data")
+<img src="results/figures/pca_plot.png" width="480" alt="PCA of VST-transformed expression data">
 
 PC1 (33% variance) partially separates infected from control samples. Overlap reflects biological heterogeneity in nasopharyngeal samples and variation in host immune activation. VST was applied to stabilise variance prior to PCA.
 
-![PCA Scree Plot](results/figures/pca_scree.png "Variance explained by principal components")
-
-Scree plot showing variance explained by each principal component.
+<img src="results/figures/pca_scree.png" width="450" alt="Variance explained by principal components">
 
 ### Differential Expression
 
-![Volcano Plot](results/figures/volcano_plot.png "Differential expression volcano plot")
+<img src="results/figures/volcano_plot.png" width="500" alt="Differential expression volcano plot">
 
 **1,902 DE genes** (FDR < 0.05, |log₂FC| > 1): 1,099 upregulated, 803 downregulated
 
@@ -76,19 +74,19 @@ Results dominated by interferon-stimulated genes (ISGs) characteristic of antivi
 
 ### Model Diagnostics
 
-![MA Plot](results/figures/ma_plot.png "MA plot showing fold change vs mean expression")
+<img src="results/figures/ma_plot.png" width="450" alt="MA plot showing fold change vs mean expression">
 
 MA plot shows symmetric fold change distribution with appropriate shrinkage.
 
-![Dispersion Plot](results/figures/dispersion_plot.png "Gene-wise dispersion estimates")
+<img src="results/figures/dispersion_plot.png" width="450" alt="Gene-wise dispersion estimates">
 
 Dispersion estimates showing gene-wise dispersion fitted to the mean-dispersion trend.
 
-![Sample Distance Heatmap](results/figures/sample_distances.png "Euclidean distance between samples")
+<img src="results/figures/sample_distances.png" width="450" alt="Euclidean distance between samples">
 
 Sample clustering by Euclidean distance shows partial separation consistent with infection status.
 
-![Top 50 DE Genes Heatmap](results/figures/top50_heatmap.png "Z-score heatmap of top DE genes")
+<img src="results/figures/top50_heatmap.png" width="400" alt="Z-score heatmap of top DE genes">
 
 Hierarchical clustering of top 50 DE genes shows consistent expression patterns within conditions.
 
@@ -96,17 +94,17 @@ Hierarchical clustering of top 50 DE genes shows consistent expression patterns 
 
 **529 GO Biological Process terms** and **28 KEGG pathways** significantly enriched (FDR < 0.05).
 
-![GO Enrichment](results/figures/go_dotplot.png "GO Biological Process enrichment")
+<img src="results/figures/go_dotplot.png" width="520" alt="GO Biological Process enrichment">
 
 Top GO terms: cytoplasmic translation, response to virus, defense response to virus.
 
-![KEGG Enrichment](results/figures/kegg_dotplot.png "KEGG pathway enrichment")
+<img src="results/figures/kegg_dotplot.png" width="520" alt="KEGG pathway enrichment">
 
 Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 1.5×10⁻⁴⁰), followed by NOD-like receptor signalling.
 
 ### ISG Signalling Cascade
 
-![Pathway Diagram](results/figures/pathway_diagram.png "RIG-I to IFN to ISG antiviral cascade")
+<img src="results/figures/pathway_diagram.png" width="550" alt="RIG-I to IFN to ISG antiviral cascade">
 
 Schematic of RIG-I → IFN → ISG antiviral cascade. Viral RNA detection by DDX58 (RIG-I) triggers interferon production and downstream activation of antiviral effectors.
 
