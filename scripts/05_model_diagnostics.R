@@ -15,11 +15,26 @@ dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
 
 message("Generating diagnostic plots...")
 
-# MA plot
+# MA plot using ggplot2
 res <- results(dds, contrast = c("condition", "positive", "negative"), alpha = 0.05)
+res_ma <- as.data.frame(res)
+res_ma$baseMean_log <- log10(res_ma$baseMean + 1)
+res_ma$sig <- ifelse(!is.na(res_ma$padj) & res_ma$padj < 0.05, "Significant", "NS")
 
-png("results/figures/ma_plot.png", width = 7, height = 6, units = "in", res = 300)
-plotMA(res, ylim = c(-8, 8), main = "MA Plot: Mean Expression vs Log2 Fold Change")
+png("results/figures/ma_plot.png", width = 7, height = 6, units = "in", res = 300, bg = "white")
+print(ggplot(res_ma, aes(x = baseMean_log, y = log2FoldChange, color = sig)) +
+        geom_point(alpha = 0.4, size = 1) +
+        scale_color_manual(values = c("NS" = "grey50", "Significant" = "#e74c3c")) +
+        geom_hline(yintercept = 0, linetype = "dashed") +
+        labs(
+          title = "MA Plot: Mean Expression vs Log2 Fold Change",
+          x = "Mean Expression (log10)",
+          y = "Log2 Fold Change",
+          color = ""
+        ) +
+        ylim(-8, 8) +
+        theme_classic(base_size = 12) +
+        theme(plot.title = element_text(face = "bold", hjust = 0.5)))
 dev.off()
 
 # Dispersion estimates
