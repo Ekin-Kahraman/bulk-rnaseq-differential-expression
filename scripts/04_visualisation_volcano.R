@@ -19,7 +19,7 @@ res <- res %>%
     )
   )
 
-# Select top genes for labelling (visual clarity threshold)
+# Select top genes for labelling
 top_genes <- res %>%
   filter(padj < 0.001, abs(log2FoldChange) > 2) %>%
   arrange(padj) %>%
@@ -65,7 +65,7 @@ ggsave("results/figures/volcano_plot.png", width = 8, height = 7, dpi = 300)
 
 # Save top genes
 write.csv(
-  top_genes %>% select(gene, log2FoldChange, padj, baseMean),
+  top_genes %>% dplyr::select(gene, log2FoldChange, padj, baseMean),
   "results/tables/top_genes.csv",
   row.names = FALSE
 )
