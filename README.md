@@ -2,6 +2,7 @@
 
 [![R](https://img.shields.io/badge/R-%E2%89%A54.0-blue)](https://www.r-project.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://zenodo.org/badge/1142001317.svg)](https://doi.org/10.5281/zenodo.18432519)
 
 Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, PCA, ~1,900 DE genes, ISG enrichment, and mechanistic interpretation of antiviral host responses.
 
@@ -218,6 +219,9 @@ Session info recorded in `results/session_info.txt`. All random processes use fi
 MIT
 
 ## Citation
+
+This repository:
+> Kahraman, E. (2026). SARS-CoV-2 Host Response in Nasopharyngeal RNA-seq. Zenodo. https://doi.org/10.5281/zenodo.18432519
 
 Data from:
 > Lieberman NAP *et al.* (2020) In vivo antiviral host transcriptional response to SARS-CoV-2 by viral load, sex, and age. *PLoS Biology* 18(9): e3000849. DOI: [10.1371/journal.pbio.3000849](https://doi.org/10.1371/journal.pbio.3000849)
