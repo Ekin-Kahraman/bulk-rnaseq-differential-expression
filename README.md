@@ -1,12 +1,15 @@
 # SARS-CoV-2 Host Response in Nasopharyngeal RNA-seq (GSE152075)
 
+[![R](https://img.shields.io/badge/R-%E2%89%A54.0-blue)](https://www.r-project.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, PCA, ~1,900 DE genes, ISG enrichment, and mechanistic interpretation of antiviral host responses.
 
 ## Highlights
 
 - Processed GEO [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075) (n=484 nasopharyngeal swabs) → balanced subset (n=60) for robust DE analysis
 - Identified **1,902 DE genes** (FDR < 0.05, |log₂FC| > 1), dominated by interferon-stimulated genes (IFIT1/2/3, OAS3, DDX58)
-- Enriched pathways: GO "response to virus", KEGG "Coronavirus disease – COVID-19" (FDR = 1.5×10⁻⁴⁰)
+- Enriched pathways: GO "response to virus", KEGG "Coronavirus disease – COVID-19" (FDR = 1.5×10<sup>-40</sup>)
 - Full reproducible R workflow (DESeq2, clusterProfiler) with modular scripts and fixed seeds
 - Results align with Lieberman *et al.* (2020), who reported viral-load-dependent ISG induction
 
@@ -40,21 +43,21 @@ Balanced subset controls for class imbalance and viral load heterogeneity. Subsa
 
 ### Quality Control
 
-<img src="results/figures/qc_library_size.png" width="450" alt="Library Size Distribution">
+![Library Size Distribution](results/figures/qc_library_size.png)
 
 Library sizes comparable between groups (median ~2M reads), supporting robust normalisation.
 
 ### Principal Component Analysis
 
-<img src="results/figures/pca_plot.png" width="480" alt="PCA of VST-transformed expression data">
+![PCA Plot](results/figures/pca_plot.png)
 
 PC1 (33% variance) partially separates infected from control samples. Overlap reflects biological heterogeneity in nasopharyngeal samples and variation in host immune activation. VST was applied to stabilise variance prior to PCA.
 
-<img src="results/figures/pca_scree.png" width="450" alt="Variance explained by principal components">
+![PCA Scree Plot](results/figures/pca_scree.png)
 
 ### Differential Expression
 
-<img src="results/figures/volcano_plot.png" width="500" alt="Differential expression volcano plot">
+![Volcano Plot](results/figures/volcano_plot.png)
 
 **1,902 DE genes** (FDR < 0.05, |log₂FC| > 1): 1,099 upregulated, 803 downregulated
 
@@ -62,31 +65,31 @@ Results dominated by interferon-stimulated genes (ISGs) characteristic of antivi
 
 ### Top ISGs by Effect Size
 
-| Gene   | Function                        | log₂FC | FDR      |
-|:-------|:--------------------------------|-------:|---------:|
-| IFIT1  | Translation inhibitor           |    3.5 | <10⁻²⁰   |
-| IFIT2  | Translation inhibitor           |    3.2 | <10⁻¹⁸   |
-| IFIT3  | Translation inhibitor           |    3.1 | <10⁻¹⁷   |
-| OAS3   | 2'-5'-Oligoadenylate synthetase |    3.0 | <10⁻¹⁷   |
-| CXCL10 | Chemokine (IFN-γ inducible)     |    2.9 | <10⁻²⁰   |
-| DDX58  | RIG-I (viral RNA sensor)        |    2.8 | <10⁻¹⁹   |
-| GBP1   | Guanylate-binding protein       |    2.7 | <10⁻¹⁹   |
+| Gene | Function | log₂FC | FDR |
+|:-----|:---------|-------:|----:|
+| IFIT1 | Translation inhibitor | 3.5 | <10<sup>-20</sup> |
+| IFIT2 | Translation inhibitor | 3.2 | <10<sup>-18</sup> |
+| IFIT3 | Translation inhibitor | 3.1 | <10<sup>-17</sup> |
+| OAS3 | 2'-5'-Oligoadenylate synthetase | 3.0 | <10<sup>-17</sup> |
+| CXCL10 | IFN-inducible chemokine | 2.9 | <10<sup>-20</sup> |
+| DDX58 | RIG-I (viral RNA sensor) | 2.8 | <10<sup>-19</sup> |
+| GBP1 | Guanylate-binding protein | 2.7 | <10<sup>-19</sup> |
 
 ### Model Diagnostics
 
-<img src="results/figures/ma_plot.png" width="450" alt="MA plot showing fold change vs mean expression">
+![MA Plot](results/figures/ma_plot.png)
 
 MA plot shows symmetric fold change distribution with appropriate shrinkage.
 
-<img src="results/figures/dispersion_plot.png" width="450" alt="Gene-wise dispersion estimates">
+![Dispersion Plot](results/figures/dispersion_plot.png)
 
 Dispersion estimates showing gene-wise dispersion fitted to the mean-dispersion trend.
 
-<img src="results/figures/sample_distances.png" width="450" alt="Euclidean distance between samples">
+![Sample Distance Heatmap](results/figures/sample_distances.png)
 
 Sample clustering by Euclidean distance shows partial separation consistent with infection status.
 
-<img src="results/figures/top50_heatmap.png" width="400" alt="Z-score heatmap of top DE genes">
+![Top 50 DE Genes Heatmap](results/figures/top50_heatmap.png)
 
 Hierarchical clustering of top 50 DE genes shows consistent expression patterns within conditions.
 
@@ -94,17 +97,17 @@ Hierarchical clustering of top 50 DE genes shows consistent expression patterns 
 
 **529 GO Biological Process terms** and **28 KEGG pathways** significantly enriched (FDR < 0.05).
 
-<img src="results/figures/go_dotplot.png" width="520" alt="GO Biological Process enrichment">
+![GO Enrichment](results/figures/go_dotplot.png)
 
 Top GO terms: cytoplasmic translation, response to virus, defense response to virus.
 
-<img src="results/figures/kegg_dotplot.png" width="520" alt="KEGG pathway enrichment">
+![KEGG Enrichment](results/figures/kegg_dotplot.png)
 
-Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 1.5×10⁻⁴⁰), followed by NOD-like receptor signalling.
+Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 1.5×10<sup>-40</sup>), followed by NOD-like receptor signalling.
 
 ### ISG Signalling Cascade
 
-<img src="results/figures/pathway_diagram.png" width="550" alt="RIG-I to IFN to ISG antiviral cascade">
+![Pathway Diagram](results/figures/pathway_diagram.png)
 
 Schematic of RIG-I → IFN → ISG antiviral cascade. Viral RNA detection by DDX58 (RIG-I) triggers interferon production and downstream activation of antiviral effectors.
 
@@ -141,6 +144,7 @@ bulk-rnaseq-differential-expression/
 ├── results/
 │   ├── figures/
 │   └── tables/
+├── LICENSE
 └── README.md
 ```
 
@@ -158,7 +162,7 @@ source("scripts/07_reproducibility.R")
 source("scripts/08_pathway_diagram.R")
 ```
 
-Analysis runtime: ~15–30 min on standard laptop after data download.
+Analysis runtime: ~5 min on a standard laptop after downloading the ~2GB raw data.
 
 ## Methods
 
@@ -176,7 +180,7 @@ Analysis runtime: ~15–30 min on standard laptop after data download.
 - Thresholds: FDR < 0.05, |log₂FC| > 1
 
 ### Enrichment Analysis
-- Gene ID conversion: Symbol → Entrez (95.8% mapped)
+- Gene ID conversion: Symbol → Entrez (96% mapped)
 - GO: Biological Process, BH-corrected
 - KEGG: Human pathways (hsa)
 
@@ -207,7 +211,7 @@ install.packages(c("ggplot2", "ggrepel", "dplyr", "pheatmap", "RColorBrewer"))
 
 ## Reproducibility
 
-Session info recorded in `results/session_info.txt`. All random processes use fixed seeds for reproducibility.
+Session info recorded in `results/session_info.txt`. All random processes use fixed seeds.
 
 ## License
 
