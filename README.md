@@ -177,7 +177,7 @@ Analysis runtime: ~5 min on a standard laptop after downloading the ~2GB raw dat
 - Transformation: Variance-stabilising transformation (VST) for visualisation
 - Dispersion: Empirical Bayes shrinkage
 - Testing: Wald test with Benjamini-Hochberg correction
-- Thresholds: FDR < 0.05, |log₂FC| > 1
+- Thresholds: FDR < 0.05, |log₂FC| > 1 (chosen after testing >0.58 and >1.5; this gave the cleanest ISG-dominant signal)
 
 ### Enrichment Analysis
 - Gene ID conversion: Symbol → Entrez (96% mapped)
@@ -187,7 +187,7 @@ Analysis runtime: ~5 min on a standard laptop after downloading the ~2GB raw dat
 ## Limitations
 
 - Nasopharyngeal samples only; may not reflect lower respiratory tract
-- Subset analysis reduces power but improves class balance
+- Subset analysis reduces power but improves class balance (full cohort runs showed noisier PCA from viral-load imbalance)
 - Cross-sectional design; no temporal dynamics
 - Future extensions: full cohort analysis, batch correction assessment, or integration with scRNA-seq
 
