@@ -126,10 +126,22 @@ The transcriptional signature reflects innate antiviral immunity:
 
 This response is protective during acute infection but may contribute to immunopathology in severe COVID-19.
 
-## Project Structure
+## Quick Start
+```r
+# Install dependencies (first time only)
+source("000_install_dependencies.R")
 
+# Run complete pipeline
+source("run_all.R")
+```
+
+Analysis runtime: ~0.5 min after data download (~2GB).
+
+## Project Structure
 ```
 bulk-rnaseq-differential-expression/
+├── 000_install_dependencies.R   # Install all required packages
+├── run_all.R                    # Run complete pipeline
 ├── scripts/
 │   ├── 00_get_data.R
 │   ├── 01_qc.R
@@ -149,8 +161,7 @@ bulk-rnaseq-differential-expression/
 └── README.md
 ```
 
-## Workflow
-
+## Individual Scripts
 ```r
 source("scripts/00_get_data.R")
 source("scripts/01_qc.R")
@@ -162,8 +173,6 @@ source("scripts/06_enrichment.R")
 source("scripts/07_reproducibility.R")
 source("scripts/08_pathway_diagram.R")
 ```
-
-Analysis runtime: ~5 min on a standard laptop after downloading the ~2GB raw data.
 
 ## Methods
 
