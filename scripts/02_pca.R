@@ -4,6 +4,10 @@
 library(DESeq2)
 library(ggplot2)
 
+if (!file.exists("data/vst_data.rds")) {
+  stop("File not found: data/vst_data.rds. Run scripts/01_qc.R first.")
+}
+
 vsd <- readRDS("data/vst_data.rds")
 
 pca_data <- plotPCA(vsd, intgroup = "condition", returnData = TRUE)

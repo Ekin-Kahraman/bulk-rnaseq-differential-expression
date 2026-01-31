@@ -8,25 +8,28 @@ dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
 
 message("Generating pathway diagram...")
 
-# Pathway components
 nodes <- data.frame(
-  label = c("SARS-CoV-2\nRNA", "DDX58\n(RIG-I)", "MAVS", "TBK1/IKKε", 
-            "IRF3/7", "Type I IFN", "IFNAR", "JAK1/TYK2", "STAT1/2",
+  label = c("SARS-CoV-2\nRNA", "DDX58\n(RIG-I)", "MAVS", "TBK1/IKKe", "IRF3/7",
+            "Type I IFN", "IFNAR", "JAK1/TYK2", "STAT1/2",
             "IFIT1", "IFIT2", "IFIT3", "OAS3", "CXCL10", "ISG15"),
   x = c(1, 1, 1, 1, 1, 3, 5, 5, 5, 7, 7, 7, 7, 7, 7),
   y = c(10, 8, 6, 4, 2, 2, 2, 4, 6, 9, 7.5, 6, 4.5, 3, 1.5),
-  type = c("virus", "sensor", "adaptor", "kinase", "tf", "cytokine", 
-           "receptor", "kinase", "tf", rep("effector", 6))
+  type = c("virus", "sensor", "adaptor", "kinase", "tf",
+           "cytokine", "receptor", "kinase", "tf",
+           rep("effector", 6))
 )
 
-# Colour scheme
 type_colors <- c(
-  virus = "#c0392b", sensor = "#2980b9", adaptor = "#27ae60",
-  kinase = "#8e44ad", tf = "#d35400", cytokine = "#16a085",
-  receptor = "#2c3e50", effector = "#e74c3c"
+  virus = "#c0392b",
+  sensor = "#2980b9",
+  adaptor = "#27ae60",
+  kinase = "#8e44ad",
+  tf = "#d35400",
+  cytokine = "#16a085",
+  receptor = "#2c3e50",
+  effector = "#e74c3c"
 )
 
-# Connections
 edges <- data.frame(
   x = c(1, 1, 1, 1, 1, 3, 5, 5, 5, 5, 5, 5, 5, 5),
   xend = c(1, 1, 1, 1, 3, 5, 5, 5, 7, 7, 7, 7, 7, 7),
@@ -34,14 +37,16 @@ edges <- data.frame(
   yend = c(8, 6, 4, 2, 2, 2, 4, 6, 9, 7.5, 6, 4.5, 3, 1.5)
 )
 
-# Plot
 ggplot() +
-  geom_segment(data = edges, aes(x = x, y = y, xend = xend, yend = yend),
+  geom_segment(data = edges,
+               aes(x = x, y = y, xend = xend, yend = yend),
                arrow = arrow(length = unit(0.15, "cm"), type = "closed"),
                color = "grey40", linewidth = 0.6) +
-  geom_point(data = nodes, aes(x = x, y = y, fill = type), 
+  geom_point(data = nodes,
+             aes(x = x, y = y, fill = type),
              shape = 21, size = 12, color = "white", stroke = 1.5) +
-  geom_text(data = nodes, aes(x = x, y = y, label = label), 
+  geom_text(data = nodes,
+            aes(x = x, y = y, label = label),
             size = 2.5, fontface = "bold", lineheight = 0.85) +
   scale_fill_manual(values = type_colors, guide = "none") +
   annotate("text", x = 1, y = 11, label = "Viral Detection", fontface = "bold", size = 4) +

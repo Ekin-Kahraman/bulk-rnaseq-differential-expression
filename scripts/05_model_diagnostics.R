@@ -7,6 +7,16 @@ library(ggplot2)
 library(dplyr)
 library(RColorBrewer)
 
+if (!file.exists("data/dds_object.rds")) {
+  stop("File not found: data/dds_object.rds. Run scripts/03_deseq2.R first.")
+}
+if (!file.exists("data/vst_data.rds")) {
+  stop("File not found: data/vst_data.rds. Run scripts/01_qc.R first.")
+}
+if (!file.exists("results/tables/deseq2_results.csv")) {
+  stop("File not found: results/tables/deseq2_results.csv. Run scripts/03_deseq2.R first.")
+}
+
 dds <- readRDS("data/dds_object.rds")
 vsd <- readRDS("data/vst_data.rds")
 res_df <- read.csv("results/tables/deseq2_results.csv")
@@ -15,7 +25,6 @@ dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
 
 message("Generating diagnostic plots...")
 
-# MA plot using ggplot2
 res <- results(dds, contrast = c("condition", "positive", "negative"), alpha = 0.05)
 res_ma <- as.data.frame(res)
 res_ma$baseMean_log <- log10(res_ma$baseMean + 1)
@@ -37,12 +46,10 @@ print(ggplot(res_ma, aes(x = baseMean_log, y = log2FoldChange, color = sig)) +
         theme(plot.title = element_text(face = "bold", hjust = 0.5)))
 dev.off()
 
-# Dispersion estimates
 png("results/figures/dispersion_plot.png", width = 7, height = 6, units = "in", res = 300)
 plotDispEsts(dds, main = "Dispersion Estimates")
 dev.off()
 
-# Sample distance heatmap
 sample_dists <- dist(t(assay(vsd)))
 sample_dist_mat <- as.matrix(sample_dists)
 
@@ -70,10 +77,10 @@ pheatmap(
   color = colorRampPalette(rev(brewer.pal(9, "Blues")))(100),
   main = "Sample Distance Matrix",
   filename = "results/figures/sample_distances.png",
-  width = 8, height = 7
+  width = 8,
+  height = 7
 )
 
-# Top 50 DE genes heatmap
 top50 <- res_df %>%
   filter(!is.na(padj)) %>%
   arrange(padj) %>%
@@ -82,6 +89,7 @@ top50 <- res_df %>%
 
 heatmap_mat <- assay(vsd)[top50, ]
 heatmap_mat <- t(scale(t(heatmap_mat)))
+heatmap_mat[is.na(heatmap_mat)] <- 0
 
 pheatmap(
   heatmap_mat,
@@ -94,19 +102,18 @@ pheatmap(
   color = colorRampPalette(c("#2166ac", "white", "#b2182b"))(100),
   main = "Top 50 DE Genes (Z-score)",
   filename = "results/figures/top50_heatmap.png",
-  width = 8, height = 12
+  width = 8,
+  height = 12
 )
 
-# PCA scree plot
 pca_res <- prcomp(t(assay(vsd)))
 var_pct <- round(100 * pca_res$sdev^2 / sum(pca_res$sdev^2), 1)
-
 scree_df <- data.frame(
   PC = factor(paste0("PC", 1:10), levels = paste0("PC", 1:10)),
   Variance = var_pct[1:10]
 )
 
-ggplot(scree_df, aes(PC, Variance)) +
+p_scree <- ggplot(scree_df, aes(PC, Variance)) +
   geom_col(fill = "#2c3e50", alpha = 0.85) +
   geom_text(aes(label = paste0(Variance, "%")), vjust = -0.5, size = 3.5) +
   geom_line(aes(x = as.numeric(PC), y = Variance), color = "#e74c3c", linewidth = 1) +
@@ -116,6 +123,6 @@ ggplot(scree_df, aes(PC, Variance)) +
   theme_classic(base_size = 12) +
   theme(plot.title = element_text(face = "bold", hjust = 0.5))
 
-ggsave("results/figures/pca_scree.png", width = 7, height = 5, dpi = 300)
+ggsave("results/figures/pca_scree.png", plot = p_scree, width = 7, height = 5, dpi = 300)
 
 message("Diagnostic plots saved")
