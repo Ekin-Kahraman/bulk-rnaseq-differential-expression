@@ -46,7 +46,7 @@ Balanced subset controls for class imbalance and viral load heterogeneity. Subsa
 
 ![Library Size Distribution](results/figures/qc_library_size.png)
 
-Library sizes comparable between groups (median ~2M reads), supporting robust normalisation.
+Library sizes comparable between groups (median ~20M reads), supporting robust normalisation.
 
 ### Principal Component Analysis
 
