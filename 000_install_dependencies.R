@@ -37,6 +37,7 @@ if (length(missing) > 0) {
     renv::install(
       pkg,
       prompt = FALSE,
+      type = if (is_macos) "binary" else NULL,
       dependencies = c("Depends", "Imports", "LinkingTo")
     )
   }
