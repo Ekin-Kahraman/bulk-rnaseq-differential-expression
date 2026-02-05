@@ -5,10 +5,10 @@ This repository is set up so a reviewer can reproduce the analysis with a small 
 ## What’s Included
 - **Code**: analysis scripts in `scripts/` and an orchestrator in `run_all.R`.
 - **Version pinning**: `renv.lock` pins CRAN + Bioconductor package versions.
-- **Precomputed outputs**: key figures and tables are committed under `results/` for convenience and fast verification.
+- **Pre-computed outputs**: key figures and tables are committed under `results/` for convenience and quick verification.
 
-## From a Clean Checkout (Recommended)
-Run these commands from the repository root:
+## From a clean checkout (recommended)
+Run these commands from the repository root (i.e., a fresh clone):
 
 ```sh
 # Restore/install pinned dependencies (CRAN + Bioconductor)
@@ -18,7 +18,7 @@ Rscript 000_install_dependencies.R
 Rscript run_all.R
 ```
 
-## Data Download Behavior
+## Data Download Behaviour
 The data download step (`scripts/00_get_data.R`) is **idempotent**:
 - If `data/counts_raw.rds` and `data/metadata.rds` already exist, it will **skip** re-downloading.
 - To force a fresh download from GEO:
@@ -27,7 +27,7 @@ The data download step (`scripts/00_get_data.R`) is **idempotent**:
 FORCE_DOWNLOAD=true Rscript scripts/00_get_data.R
 ```
 
-## Network Dependencies
+## Network dependencies
 Some steps require network access:
 - GEO download (via `GEOquery`) in `scripts/00_get_data.R`
 - KEGG pathway annotation (via KEGG REST) in `scripts/06_enrichment.R`

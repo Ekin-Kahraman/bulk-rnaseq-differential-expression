@@ -225,7 +225,7 @@ This project uses `renv` for reproducible dependencies. Install/restore everythi
 Rscript 000_install_dependencies.R
 ```
 
-### Manual install (optional)
+### Manual installation (optional)
 If you prefer to install packages manually instead of using `renv`:
 
 #### Bioconductor
@@ -250,7 +250,7 @@ install.packages(c("ggplot2", "ggrepel", "dplyr", "pheatmap", "RColorBrewer"))
 
 Session info recorded in `results/session_info.txt`. All random processes use fixed seeds.
 
-## License
+## Licence
 
 MIT
 
