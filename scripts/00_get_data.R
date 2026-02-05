@@ -60,6 +60,19 @@ if (!force_download && file.exists(counts_out) && file.exists(metadata_out)) {
   }
 
   sample_ids <- sub(".*\\b(POS_\\d+|NEG_\\d+)\\b.*", "\\1", pheno$title)
+  sample_ids[!grepl("^(POS|NEG)_\\d+$", sample_ids)] <- NA_character_
+
+  # Fall back to GEO accessions if title parsing fails for a subset of records.
+  if ("geo_accession" %in% colnames(pheno)) {
+    sample_ids[is.na(sample_ids)] <- pheno$geo_accession[is.na(sample_ids)]
+  }
+
+  if (any(is.na(sample_ids))) {
+    stop("Could not derive sample IDs for all records from GEO metadata.")
+  }
+  if (any(duplicated(sample_ids))) {
+    stop("Duplicate sample IDs detected in GEO metadata.")
+  }
 
   metadata <- data.frame(
     sample_id = sample_ids,
@@ -71,8 +84,27 @@ if (!force_download && file.exists(counts_out) && file.exists(metadata_out)) {
   metadata$condition <- factor(metadata$condition, levels = c("negative", "positive"))
 
   common <- intersect(colnames(raw_counts), rownames(metadata))
+  if (length(common) == 0) {
+    stop("No overlapping sample IDs between count matrix and metadata.")
+  }
   raw_counts <- raw_counts[, common, drop = FALSE]
   metadata <- metadata[common, , drop = FALSE]
+
+  missing_condition <- is.na(metadata$condition)
+  if (any(missing_condition)) {
+    warning(
+      sprintf(
+        "Dropping %d samples with unknown condition labels after alignment.",
+        sum(missing_condition)
+      )
+    )
+    metadata <- metadata[!missing_condition, , drop = FALSE]
+    raw_counts <- raw_counts[, rownames(metadata), drop = FALSE]
+  }
+
+  if (ncol(raw_counts) == 0) {
+    stop("No samples left after metadata alignment/condition filtering.")
+  }
 
   stopifnot(is.data.frame(metadata))
   stopifnot("condition" %in% colnames(metadata))

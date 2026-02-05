@@ -21,11 +21,15 @@ message("Running enrichment analysis...")
 sig_genes <- res_df %>%
   filter(padj < 0.05, abs(log2FoldChange) > 1) %>%
   pull(gene)
+sig_genes <- unique(sig_genes)
 
 n_up <- sum(res_df$padj < 0.05 & res_df$log2FoldChange > 1, na.rm = TRUE)
 n_down <- sum(res_df$padj < 0.05 & res_df$log2FoldChange < -1, na.rm = TRUE)
 
 message(length(sig_genes), " DE genes (", n_up, " up, ", n_down, " down)")
+if (length(sig_genes) == 0) {
+  stop("No DE genes passed padj/log2FC thresholds; enrichment cannot proceed.")
+}
 
 gene_map <- tryCatch({
   bitr(sig_genes, fromType = "ENSEMBL",
@@ -55,8 +59,8 @@ go_bp <- enrichGO(
 )
 
 go_df <- as.data.frame(go_bp)
+write.csv(go_df, "results/tables/go_biological_process.csv", row.names = FALSE)
 if (nrow(go_df) > 0) {
-  write.csv(go_df, "results/tables/go_biological_process.csv", row.names = FALSE)
   message("  ", nrow(go_df), " GO terms enriched")
   
   p1 <- dotplot(go_bp, showCategory = 20, font.size = 9) +
@@ -65,26 +69,35 @@ if (nrow(go_df) > 0) {
   ggsave("results/figures/go_dotplot.png", p1, width = 10, height = 9, dpi = 300)
 }
 
-kegg <- enrichKEGG(
-  gene = gene_map$ENTREZID,
-  organism = "hsa",
-  pAdjustMethod = "BH",
-  pvalueCutoff = 0.05,
-  qvalueCutoff = 0.1
+kegg <- tryCatch(
+  enrichKEGG(
+    gene = gene_map$ENTREZID,
+    organism = "hsa",
+    pAdjustMethod = "BH",
+    pvalueCutoff = 0.05,
+    qvalueCutoff = 0.1
+  ),
+  error = function(e) {
+    warning("KEGG enrichment unavailable (network/service issue): ", conditionMessage(e))
+    NULL
+  }
 )
 
-kegg_df <- as.data.frame(kegg)
-if (nrow(kegg_df) > 0) {
-  kegg_read <- setReadable(kegg, OrgDb = org.Hs.eg.db, keyType = "ENTREZID")
-  kegg_df <- as.data.frame(kegg_read)
-  write.csv(kegg_df, "results/tables/kegg_pathways.csv", row.names = FALSE)
-  message("  ", nrow(kegg_df), " KEGG pathways enriched")
-  
-  p2 <- dotplot(kegg_read, showCategory = 20, font.size = 9) +
-    ggtitle("KEGG Pathway Enrichment") +
-    theme(plot.title = element_text(face = "bold", hjust = 0.5))
-  ggsave("results/figures/kegg_dotplot.png", p2, width = 10, height = 9, dpi = 300)
+kegg_df <- data.frame()
+if (!is.null(kegg)) {
+  kegg_df <- as.data.frame(kegg)
+  if (nrow(kegg_df) > 0) {
+    kegg_read <- setReadable(kegg, OrgDb = org.Hs.eg.db, keyType = "ENTREZID")
+    kegg_df <- as.data.frame(kegg_read)
+    message("  ", nrow(kegg_df), " KEGG pathways enriched")
+
+    p2 <- dotplot(kegg_read, showCategory = 20, font.size = 9) +
+      ggtitle("KEGG Pathway Enrichment") +
+      theme(plot.title = element_text(face = "bold", hjust = 0.5))
+    ggsave("results/figures/kegg_dotplot.png", p2, width = 10, height = 9, dpi = 300)
+  }
 }
+write.csv(kegg_df, "results/tables/kegg_pathways.csv", row.names = FALSE)
 
 if (nrow(go_df) > 0) {
   message("\nTop GO terms:")

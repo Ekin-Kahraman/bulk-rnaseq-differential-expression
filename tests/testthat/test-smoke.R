@@ -27,6 +27,10 @@ test_that("DESeq2 results CSV exists and is well-formed", {
   expect_gt(nrow(res), 0)
   expect_true(any(!is.na(res$padj)))
   expect_true(all(nchar(res$gene) > 0))
+
+  pvals <- res$pvalue[!is.na(res$pvalue)]
+  expect_true(length(pvals) > 0)
+  expect_true(all(pvals >= 0 & pvals <= 1))
 })
 
 test_that("key figures exist", {
@@ -35,4 +39,14 @@ test_that("key figures exist", {
 
   expect_true(file.exists(volcano))
   expect_true(file.exists(pca))
+})
+
+test_that("key derived tables exist", {
+  top_genes <- file.path(root, "results/tables/top_genes.csv")
+  go_terms <- file.path(root, "results/tables/go_biological_process.csv")
+  kegg_terms <- file.path(root, "results/tables/kegg_pathways.csv")
+
+  expect_true(file.exists(top_genes))
+  expect_true(file.exists(go_terms))
+  expect_true(file.exists(kegg_terms))
 })

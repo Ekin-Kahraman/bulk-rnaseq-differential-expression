@@ -17,6 +17,12 @@ counts <- readRDS("data/counts_raw.rds")
 metadata <- readRDS("data/metadata.rds")
 
 metadata <- metadata[colnames(counts), , drop = FALSE]
+if (!all(colnames(counts) == rownames(metadata))) {
+  stop("Counts and metadata are not aligned by sample ID.")
+}
+if (any(is.na(metadata$condition))) {
+  stop("Metadata contains missing condition labels. Re-run scripts/00_get_data.R.")
+}
 
 message("Starting QC: ", nrow(counts), " genes, ", ncol(counts), " samples")
 
@@ -47,9 +53,18 @@ set.seed(123)
 n <- 30
 pos_samples <- rownames(metadata)[metadata$condition == "positive"]
 neg_samples <- rownames(metadata)[metadata$condition == "negative"]
+target_n <- min(n, length(pos_samples), length(neg_samples))
+
+if (target_n == 0) {
+  stop("At least one condition has zero samples after QC filtering.")
+}
+if (target_n < n) {
+  message("Using ", target_n, " samples per condition (limited by available data).")
+}
+
 balanced <- c(
-  sample(pos_samples, min(n, length(pos_samples))),
-  sample(neg_samples, min(n, length(neg_samples)))
+  sample(pos_samples, target_n),
+  sample(neg_samples, target_n)
 )
 counts <- counts[, balanced, drop = FALSE]
 metadata <- metadata[balanced, , drop = FALSE]
