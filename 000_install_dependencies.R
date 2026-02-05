@@ -1,31 +1,20 @@
 #!/usr/bin/env Rscript
-# Install all required packages for the analysis pipeline
+# Restore all required packages for the analysis pipeline using renv.
 
+repos <- "https://packagemanager.posit.co/cran/latest"
 
-message("Checking and installing required packages...\n")
-
-# CRAN packages
-cran_pkgs <- c("ggplot2", "dplyr", "pheatmap", "RColorBrewer", "ggrepel", "scales")
-
-for (pkg in cran_pkgs) {
-  if (!requireNamespace(pkg, quietly = TRUE)) {
-    message("Installing ", pkg, "...")
-    install.packages(pkg, repos = "https://cloud.r-project.org")
-  }
+if (!file.exists("renv.lock")) {
+  stop("File not found: renv.lock\nThis project uses renv for reproducible dependencies.")
 }
 
-# Bioconductor
-if (!requireNamespace("BiocManager", quietly = TRUE)) {
-  install.packages("BiocManager", repos = "https://cloud.r-project.org")
+options(renv.consent = TRUE)
+
+if (!requireNamespace("renv", quietly = TRUE)) {
+  message("Installing renv...")
+  install.packages("renv", repos = repos)
 }
 
-bioc_pkgs <- c("DESeq2", "edgeR", "GEOquery", "clusterProfiler", "org.Hs.eg.db", "enrichplot")
+message("Restoring packages from renv.lock...")
+renv::restore(prompt = FALSE)
 
-for (pkg in bioc_pkgs) {
-  if (!requireNamespace(pkg, quietly = TRUE)) {
-    message("Installing ", pkg, "...")
-    BiocManager::install(pkg, update = FALSE, ask = FALSE)
-  }
-}
-
-message("\nAll packages installed. Run: source('run_all.R')")
+message("\nDone. Run: source('run_all.R')")
