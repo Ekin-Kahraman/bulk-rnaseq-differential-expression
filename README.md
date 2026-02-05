@@ -134,6 +134,22 @@ Analysis runtime: ~0.5 min after data download (~2GB).
 - Tests: `Rscript -e 'testthat::test_dir("tests/testthat")'`
 - Reproducibility details (expected outputs, network requirements): see `REPRODUCIBILITY.md`
 
+## Data and Code Availability
+- Source data: GEO accession [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075)
+- Analysis code: this repository (MIT licence)
+- Frozen software environment: `renv.lock`
+- Key derived outputs: `results/figures/` and `results/tables/`
+
+## Peer Review Checklist
+Run from the repository root:
+```sh
+Rscript 000_install_dependencies.R
+Rscript run_all.R
+Rscript -e 'renv::status()'
+Rscript dev/lint.R
+Rscript -e 'testthat::test_dir("tests/testthat")'
+```
+
 ## Citation Metadata
 - Zenodo DOI: `10.5281/zenodo.18432519`
 - For citation tooling, see `CITATION.cff`
