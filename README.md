@@ -15,13 +15,13 @@ Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, PCA
 - Full reproducible R workflow (DESeq2, clusterProfiler) with modular scripts and fixed seeds
 - Results align with Lieberman *et al.* (2020), who reported viral-load-dependent ISG induction
 
-## Skills Demonstrated
+## Methods Overview
 
 - Bulk RNA-seq preprocessing and quality control
 - Differential expression modelling with DESeq2
 - Variance-stabilising transformation (VST) for visualisation
 - Functional enrichment analysis (GO/KEGG)
-- Reproducible bioinformatics workflows
+- Reproducible analysis workflow (pinned dependencies via `renv`, fixed random seeds)
 
 ## Dataset
 
