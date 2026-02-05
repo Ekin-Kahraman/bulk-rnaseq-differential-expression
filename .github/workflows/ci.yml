@@ -24,6 +24,9 @@ jobs:
       - name: Install missing dependencies
         run: Rscript 000_install_dependencies.R
 
+      - name: Verify renv.lock unchanged
+        run: git diff --exit-code renv.lock
+
       - name: Check renv status
         run: >
           Rscript -e 's <- renv::status();

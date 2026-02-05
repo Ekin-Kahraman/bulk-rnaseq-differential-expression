@@ -2,6 +2,7 @@
 # Restore all required packages for the analysis pipeline using renv.
 
 is_macos <- identical(Sys.info()[["sysname"]], "Darwin")
+deps_fields <- c("Depends", "Imports", "LinkingTo")
 
 # On macOS, prefer CRAN binaries to avoid compilation toolchain issues.
 # (Package Manager / RSPM often serves source builds for macOS.)
@@ -19,11 +20,23 @@ options(renv.consent = TRUE)
 
 if (!requireNamespace("renv", quietly = TRUE)) {
   message("Installing renv...")
-  install.packages("renv")
+  install.packages("renv", dependencies = deps_fields)
 }
 
 message("Restoring packages from renv.lock...")
 renv::restore(prompt = FALSE)
+
+if (is_macos && !requireNamespace("ggiraph", quietly = TRUE)) {
+  message("\nPre-installing ggiraph (CRAN binary) to avoid local compilation...")
+  tryCatch(
+    install.packages("ggiraph", type = "binary", dependencies = deps_fields),
+    error = function(e) {
+      message("ggiraph binary install failed: ", conditionMessage(e))
+      message("If ggiraph is required and no binary is available, install Xcode CLT with:")
+      message("  xcode-select --install")
+    }
+  )
+}
 
 deps <- renv::dependencies()
 pkgs <- sort(unique(deps$Package))
@@ -34,11 +47,22 @@ if (length(missing) > 0) {
   message("Installing missing packages: ", paste(missing, collapse = ", "))
   for (pkg in missing) {
     message("\n==> Installing: ", pkg)
-    renv::install(
-      pkg,
-      prompt = FALSE,
-      type = if (is_macos) "binary" else NULL,
-      dependencies = c("Depends", "Imports", "LinkingTo")
+    tryCatch(
+      renv::install(
+        pkg,
+        prompt = FALSE,
+        type = if (is_macos) "binary" else NULL,
+        dependencies = deps_fields
+      ),
+      error = function(e) {
+        message("\nFailed installing ", pkg, ": ", conditionMessage(e))
+        if (is_macos) {
+          message("\nmacOS troubleshooting:")
+          message("  - Ensure Xcode Command Line Tools are installed: xcode-select --install")
+          message("  - Then retry: Rscript 000_install_dependencies.R")
+        }
+        stop(e)
+      }
     )
   }
 }
