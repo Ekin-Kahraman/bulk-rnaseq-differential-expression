@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite the Zenodo DOI."
+title: "SARS-CoV-2 Host Response in Nasopharyngeal RNA-seq (GSE152075)"
+type: software
+license: MIT
+repository-code: "https://github.com/Ekin-Kahraman/bulk-rnaseq-differential-expression"
+doi: "10.5281/zenodo.18432519"
+keywords:
+  - "bioinformatics"
+  - "computational biology"
+  - "RNA-seq"
+  - "differential expression"
+  - "DESeq2"
+  - "Bioconductor"
+authors:
+  - family-names: "Kahraman"
+    given-names: "Ekin"
+preferred-citation:
+  type: dataset
+  doi: "10.5281/zenodo.18432519"
+  title: "SARS-CoV-2 Host Response in Nasopharyngeal RNA-seq (GSE152075)"
+  authors:
+    - family-names: "Kahraman"
+      given-names: "Ekin"

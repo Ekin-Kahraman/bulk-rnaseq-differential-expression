@@ -11,7 +11,7 @@ required <- c("DESeq2", "edgeR", "GEOquery", "clusterProfiler",
 missing <- required[!sapply(required, requireNamespace, quietly = TRUE)]
 if (length(missing) > 0) {
   stop("Missing packages: ", paste(missing, collapse = ", "), 
-       "\nRun: source('000_install_dependencies.R')")
+       "\nRun: Rscript 000_install_dependencies.R")
 }
 
 start_time <- Sys.time()

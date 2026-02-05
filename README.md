@@ -3,6 +3,7 @@
 [![R](https://img.shields.io/badge/R-%E2%89%A54.0-blue)](https://www.r-project.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/1142001317.svg)](https://doi.org/10.5281/zenodo.18432519)
+[![CI](https://github.com/Ekin-Kahraman/bulk-rnaseq-differential-expression/actions/workflows/ci.yml/badge.svg)](https://github.com/Ekin-Kahraman/bulk-rnaseq-differential-expression/actions/workflows/ci.yml)
 
 Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, PCA, ~1,900 DE genes, ISG enrichment, and mechanistic interpretation of antiviral host responses.
 
@@ -142,6 +143,11 @@ Analysis runtime: ~0.5 min after data download (~2GB).
 - Quality checks:
   - Lint: `Rscript dev/lint.R`
   - Tests: `Rscript -e 'testthat::test_dir("tests/testthat")'`
+- Reproducibility details (expected outputs, network requirements): see `REPRODUCIBILITY.md`
+
+## Citation
+- Zenodo DOI: `10.5281/zenodo.18432519`
+- For citation tooling, see `CITATION.cff`
 
 ## Project Structure
 ```
