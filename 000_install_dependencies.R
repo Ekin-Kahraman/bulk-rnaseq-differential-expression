@@ -4,13 +4,17 @@
 is_macos <- identical(Sys.info()[["sysname"]], "Darwin")
 deps_fields <- c("Depends", "Imports", "LinkingTo")
 
-# On macOS, prefer CRAN binaries to avoid compilation toolchain issues.
-# (Package Manager / RSPM often serves source builds for macOS.)
-if (is_macos) {
-  options(pkgType = "binary")
-  options(repos = c(CRAN = "https://cloud.r-project.org"))
-  Sys.setenv(RENV_CONFIG_PPM_ENABLED = "FALSE")
-}
+# Use a single, stable CRAN repo for both renv + non-renv installs.
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+Sys.setenv(RENV_CONFIG_PPM_ENABLED = "FALSE")
+
+# Not every R distribution on macOS supports CRAN macOS binaries. Detect whether
+# a "binary" repo path exists; if not, fall back to source installs.
+binary_repo <- utils::contrib.url(getOption("repos"), type = "binary")
+source_repo <- utils::contrib.url(getOption("repos"), type = "source")
+has_cran_binaries <- is_macos && !identical(binary_repo, source_repo) && grepl("/bin/", binary_repo)
+install_type <- if (has_cran_binaries) "binary" else "source"
+options(pkgType = install_type)
 
 if (!file.exists("renv.lock")) {
   stop("File not found: renv.lock\nThis project uses renv for reproducible dependencies.")
@@ -23,16 +27,20 @@ if (!requireNamespace("renv", quietly = TRUE)) {
   install.packages("renv", dependencies = deps_fields)
 }
 
+if (requireNamespace("BiocManager", quietly = TRUE)) {
+  options(repos = BiocManager::repositories())
+}
+
 message("Restoring packages from renv.lock...")
 renv::restore(prompt = FALSE)
 
 if (is_macos && !requireNamespace("ggiraph", quietly = TRUE)) {
-  message("\nPre-installing ggiraph (CRAN binary) to avoid local compilation...")
+  message("\nPre-installing ggiraph (CRAN ", install_type, ")...")
   tryCatch(
-    install.packages("ggiraph", type = "binary", dependencies = deps_fields),
+    install.packages("ggiraph", type = install_type, dependencies = deps_fields),
     error = function(e) {
-      message("ggiraph binary install failed: ", conditionMessage(e))
-      message("If ggiraph is required and no binary is available, install Xcode CLT with:")
+      message("ggiraph install failed: ", conditionMessage(e))
+      message("If compilation is required, ensure Xcode CLT are installed:")
       message("  xcode-select --install")
     }
   )
@@ -51,7 +59,7 @@ if (length(missing) > 0) {
       renv::install(
         pkg,
         prompt = FALSE,
-        type = if (is_macos) "binary" else NULL,
+        type = install_type,
         dependencies = deps_fields
       ),
       error = function(e) {
@@ -67,7 +75,11 @@ if (length(missing) > 0) {
   }
 }
 
-message("Updating renv.lock...")
-renv::snapshot(prompt = FALSE)
+if (!identical(Sys.getenv("CI"), "true")) {
+  message("Updating renv.lock...")
+  renv::snapshot(prompt = FALSE)
+} else {
+  message("CI detected; skipping renv.lock snapshot.")
+}
 
 message("\nDone. Run: source('run_all.R')")
