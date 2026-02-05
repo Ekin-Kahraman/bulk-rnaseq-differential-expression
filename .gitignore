@@ -1,7 +1,7 @@
 # R session files
 .Rhistory
 .RData
-.RDataTmp
+.RDataTmp*
 .Rproj.user/
 
 # Derived data
@@ -19,3 +19,12 @@ results/*
 
 # OS
 .DS_Store
+
+# renv
+renv/library/
+renv/staging/
+renv/sandbox/
+
+# R artifacts
+*.Rhistory
+*.RData
