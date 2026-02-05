@@ -82,4 +82,4 @@ if (!identical(Sys.getenv("CI"), "true")) {
   message("CI detected; skipping renv.lock snapshot.")
 }
 
-message("\nDone. Run: source('run_all.R')")
+message("\nDone. Run: Rscript run_all.R")
