@@ -1,7 +1,8 @@
+cat > .gitignore << 'EOF'
 # R session files
 .Rhistory
 .RData
-.RDataTmp
+.RDataTmp*
 .Rproj.user/
 
 # Derived data
@@ -16,6 +17,11 @@ results/*
 !results/tables/
 !results/tables/*.csv
 
-
 # OS
 .DS_Store
+
+# renv
+renv/library/
+renv/staging/
+renv/sandbox/
+EOF
