@@ -17,4 +17,17 @@ if (!requireNamespace("renv", quietly = TRUE)) {
 message("Restoring packages from renv.lock...")
 renv::restore(prompt = FALSE)
 
+deps <- renv::dependencies()
+pkgs <- sort(unique(deps$Package))
+pkgs <- setdiff(pkgs, "renv")
+
+missing <- pkgs[!vapply(pkgs, requireNamespace, quietly = TRUE, FUN.VALUE = logical(1))]
+if (length(missing) > 0) {
+  message("Installing missing packages: ", paste(missing, collapse = ", "))
+  renv::install(missing)
+}
+
+message("Updating renv.lock...")
+renv::snapshot(prompt = FALSE)
+
 message("\nDone. Run: source('run_all.R')")
