@@ -127,20 +127,28 @@ The transcriptional signature reflects innate antiviral immunity:
 This response is protective during acute infection but may contribute to immunopathology in severe COVID-19.
 
 ## Quick Start
-```r
-# Install dependencies (first time only)
-source("000_install_dependencies.R")
+```sh
+# Install/restore dependencies (first time only)
+Rscript 000_install_dependencies.R
 
 # Run complete pipeline
-source("run_all.R")
+Rscript run_all.R
 ```
 
 Analysis runtime: ~0.5 min after data download (~2GB).
+
+### Notes
+- To re-download the GEO dataset (otherwise the pipeline reuses existing `data/*.rds` outputs): `FORCE_DOWNLOAD=true Rscript scripts/00_get_data.R`
+- Quality checks:
+  - Lint: `Rscript dev/lint.R`
+  - Tests: `Rscript -e 'testthat::test_dir("tests/testthat")'`
 
 ## Project Structure
 ```
 bulk-rnaseq-differential-expression/
 ├── 000_install_dependencies.R   # Install all required packages
+├── dev/
+│   └── lint.R                   # Lint scripts/ via lintr
 ├── run_all.R                    # Run complete pipeline
 ├── scripts/
 │   ├── 00_get_data.R
@@ -157,6 +165,8 @@ bulk-rnaseq-differential-expression/
 ├── results/
 │   ├── figures/
 │   └── tables/
+├── tests/
+│   └── testthat/
 ├── LICENSE
 └── README.md
 ```
@@ -203,13 +213,24 @@ source("scripts/08_pathway_diagram.R")
 
 ## Requirements
 
-### Bioconductor
-```r
-BiocManager::install(c("DESeq2", "edgeR", "GEOquery", 
-                       "clusterProfiler", "org.Hs.eg.db", "enrichplot"))
+### Dependencies (renv)
+This project uses `renv` for reproducible dependencies. Install/restore everything with:
+```sh
+Rscript 000_install_dependencies.R
 ```
 
-### CRAN
+### Manual install (optional)
+If you prefer to install packages manually instead of using `renv`:
+
+#### Bioconductor
+```r
+BiocManager::install(c(
+  "DESeq2", "edgeR", "GEOquery",
+  "clusterProfiler", "org.Hs.eg.db", "enrichplot"
+))
+```
+
+#### CRAN
 ```r
 install.packages(c("ggplot2", "ggrepel", "dplyr", "pheatmap", "RColorBrewer"))
 ```
