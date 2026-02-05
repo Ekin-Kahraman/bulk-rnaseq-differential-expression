@@ -115,17 +115,7 @@ Schematic of RIG-I → IFN → ISG antiviral cascade. Viral RNA detection by DDX
 
 ## Biological Interpretation
 
-The transcriptional signature reflects innate antiviral immunity:
-
-1. **Detection**: DDX58 (RIG-I) senses cytoplasmic viral RNA
-2. **Signal transduction**: MAVS → TBK1 → IRF3/7 activation
-3. **Interferon response**: Type I IFN production and signalling
-4. **Effector functions**:
-   - IFIT1/2/3: Block viral protein synthesis
-   - OAS3: Activates RNase L for RNA degradation
-   - CXCL10: Recruits effector lymphocytes
-
-This response is protective during acute infection but may contribute to immunopathology in severe COVID-19.
+The transcriptional signature is consistent with innate antiviral immunity. DDX58 (RIG-I) detects viral RNA, signalling proceeds via MAVS/TBK1/IRF3/7, and type I interferon responses induce canonical ISGs (including IFIT1/2/3, OAS3, and CXCL10). This pattern is expected in acute infection and supports the observed enrichment of antiviral pathways.
 
 ## Quick Start
 ```sh
@@ -140,21 +130,31 @@ Analysis runtime: ~0.5 min after data download (~2GB).
 
 ### Notes
 - To re-download the GEO dataset (otherwise the pipeline reuses existing `data/*.rds` outputs): `FORCE_DOWNLOAD=true Rscript scripts/00_get_data.R`
-- Quality checks:
-  - Lint: `Rscript dev/lint.R`
-  - Tests: `Rscript -e 'testthat::test_dir("tests/testthat")'`
+- Lint: `Rscript dev/lint.R`
+- Tests: `Rscript -e 'testthat::test_dir("tests/testthat")'`
 - Reproducibility details (expected outputs, network requirements): see `REPRODUCIBILITY.md`
 
-## Citation
+## Citation Metadata
 - Zenodo DOI: `10.5281/zenodo.18432519`
 - For citation tooling, see `CITATION.cff`
 
 ## Project Structure
 ```
 bulk-rnaseq-differential-expression/
+├── .github/
+│   └── workflows/
+│       └── ci.yml               # CI (renv status, lint, tests)
+├── .lintr                       # lintr configuration
+├── .Rprofile                    # renv autoloader
 ├── 000_install_dependencies.R   # Install all required packages
+├── CITATION.cff
+├── REPRODUCIBILITY.md
 ├── dev/
 │   └── lint.R                   # Lint scripts/ via lintr
+├── renv/
+│   ├── activate.R
+│   └── settings.json
+├── renv.lock
 ├── run_all.R                    # Run complete pipeline
 ├── scripts/
 │   ├── 00_get_data.R
@@ -254,7 +254,7 @@ Session info recorded in `results/session_info.txt`. All random processes use fi
 
 MIT
 
-## Citation
+## How to Cite
 
 This repository:
 > Kahraman, E. (2026). SARS-CoV-2 Host Response in Nasopharyngeal RNA-seq. Zenodo. https://doi.org/10.5281/zenodo.18432519
