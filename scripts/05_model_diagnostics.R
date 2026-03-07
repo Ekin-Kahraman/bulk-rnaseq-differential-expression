@@ -15,6 +15,9 @@ if (!file.exists("data/dds_object.rds")) {
 if (!file.exists("data/deseq_results.rds")) {
   stop("File not found: data/deseq_results.rds. Run scripts/03_deseq2.R first.")
 }
+if (!file.exists("data/deseq_results_shrunken.rds")) {
+  stop("File not found: data/deseq_results_shrunken.rds. Run scripts/03_deseq2.R first.")
+}
 if (!file.exists("data/vst_data.rds")) {
   stop("File not found: data/vst_data.rds. Run scripts/01_qc.R first.")
 }
@@ -23,7 +26,7 @@ if (!file.exists("results/tables/deseq2_results.csv")) {
 }
 
 dds <- readRDS("data/dds_object.rds")
-res <- readRDS("data/deseq_results.rds")
+res <- readRDS("data/deseq_results_shrunken.rds")
 vsd <- readRDS("data/vst_data.rds")
 res_df <- read.csv("results/tables/deseq2_results.csv")
 
@@ -45,9 +48,9 @@ print(ggplot(res_ma, aes(x = baseMean_log, y = log2FoldChange, color = sig)) +
         scale_color_manual(values = c("NS" = "grey50", "Significant" = "#e74c3c")) +
         geom_hline(yintercept = 0, linetype = "dashed") +
         labs(
-          title = "MA Plot: Mean Expression vs Log2 Fold Change",
+          title = "MA Plot: Mean Expression vs Shrunken Log2 Fold Change",
           x = "Mean Expression (log10)",
-          y = "Log2 Fold Change",
+          y = "Shrunken Log2 Fold Change",
           color = ""
         ) +
         ylim(-8, 8) +

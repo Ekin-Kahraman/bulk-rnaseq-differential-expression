@@ -51,6 +51,17 @@ metadata <- metadata[keep, , drop = FALSE]
 
 message(sum(keep), " samples passed QC")
 
+rownames(counts) <- sub("\\..*", "", rownames(counts))
+
+if (any(duplicated(rownames(counts)))) {
+  n_dup <- sum(duplicated(rownames(counts)))
+  counts <- rowsum(counts, rownames(counts))
+  message("Collapsed ", n_dup, " duplicates")
+}
+
+saveRDS(counts, "data/counts_qc.rds")
+saveRDS(metadata, "data/metadata_qc.rds")
+
 set.seed(analysis_config$sample_seed)
 n <- analysis_config$samples_per_group
 pos_samples <- rownames(metadata)[metadata$condition == "positive"]
@@ -70,14 +81,6 @@ balanced <- c(
 )
 counts <- counts[, balanced, drop = FALSE]
 metadata <- metadata[balanced, , drop = FALSE]
-
-rownames(counts) <- sub("\\..*", "", rownames(counts))
-
-if (any(duplicated(rownames(counts)))) {
-  n_dup <- sum(duplicated(rownames(counts)))
-  counts <- rowsum(counts, rownames(counts))
-  message("Collapsed ", n_dup, " duplicates")
-}
 
 keep_genes <- rowSums(cpm(counts) >= analysis_config$gene_cpm_cutoff) >= analysis_config$gene_min_samples
 counts <- counts[keep_genes, , drop = FALSE]

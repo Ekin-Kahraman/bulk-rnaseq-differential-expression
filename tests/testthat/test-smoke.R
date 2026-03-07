@@ -18,12 +18,17 @@ source(file.path(root, "scripts/config.R"), local = TRUE)
 
 test_that("DESeq2 results CSV exists and is well-formed", {
   path <- file.path(root, "results/tables/deseq2_results.csv")
+  shrunken_path <- file.path(root, "results/tables/deseq2_results_shrunken.csv")
   expect_true(file.exists(path))
+  expect_true(file.exists(shrunken_path))
   skip_if_not(file.exists(path))
 
   res <- read.csv(path, stringsAsFactors = FALSE)
+  res_shrunk <- read.csv(shrunken_path, stringsAsFactors = FALSE)
   required_cols <- c("gene", "baseMean", "log2FoldChange", "lfcSE", "stat", "pvalue", "padj")
   expect_true(all(required_cols %in% names(res)))
+  expect_true(all(required_cols %in% names(res_shrunk)))
+  expect_equal(res$gene, res_shrunk$gene)
 
   expect_gt(nrow(res), 1000)
   expect_true(any(!is.na(res$padj)))
@@ -38,23 +43,31 @@ test_that("DESeq2 results CSV exists and is well-formed", {
 test_that("key figures exist", {
   volcano <- file.path(root, "results/figures/volcano_plot.png")
   pca <- file.path(root, "results/figures/pca_plot.png")
+  sensitivity <- file.path(root, "results/figures/sensitivity_lfc_scatter.png")
 
   expect_true(file.exists(volcano))
   expect_true(file.exists(pca))
+  expect_true(file.exists(sensitivity))
 })
 
 test_that("key derived tables exist", {
   top_genes <- file.path(root, "results/tables/top_genes.csv")
   go_terms <- file.path(root, "results/tables/go_biological_process.csv")
   kegg_terms <- file.path(root, "results/tables/kegg_pathways.csv")
+  full_cohort <- file.path(root, "results/tables/full_cohort_deseq2_results.csv")
+  summary_path <- file.path(root, "results/tables/analysis_summary.csv")
 
   expect_true(file.exists(top_genes))
   expect_true(file.exists(go_terms))
   expect_true(file.exists(kegg_terms))
+  expect_true(file.exists(full_cohort))
+  expect_true(file.exists(summary_path))
 
   top_df <- read.csv(top_genes, stringsAsFactors = FALSE)
   go_df <- read.csv(go_terms, stringsAsFactors = FALSE)
   kegg_df <- read.csv(kegg_terms, stringsAsFactors = FALSE)
+  full_df <- read.csv(full_cohort, stringsAsFactors = FALSE)
+  summary_df <- read.csv(summary_path, stringsAsFactors = FALSE)
 
   expect_true(all(c("gene", "log2FoldChange", "padj", "baseMean") %in% names(top_df)))
   expect_gt(nrow(top_df), 0)
@@ -64,6 +77,23 @@ test_that("key derived tables exist", {
 
   expect_true(all(c("Description", "p.adjust", "Count") %in% names(kegg_df)))
   expect_gt(nrow(kegg_df), 0)
+
+  expect_true(all(c("gene", "baseMean", "log2FoldChange", "padj", "shrunkenLog2FoldChange") %in% names(full_df)))
+  expect_gt(nrow(full_df), 1000)
+
+  expect_equal(nrow(summary_df), 1)
+  expect_true(all(c(
+    "qc_samples_total",
+    "balanced_sig_genes",
+    "full_cohort_sig_genes",
+    "shared_threshold_genes",
+    "shared_sign_concordance",
+    "shrunken_lfc_spearman"
+  ) %in% names(summary_df)))
+  expect_gt(summary_df$qc_samples_total[[1]], 100)
+  expect_gt(summary_df$shared_threshold_genes[[1]], 100)
+  expect_gt(summary_df$shared_sign_concordance[[1]], 0.8)
+  expect_gt(summary_df$shrunken_lfc_spearman[[1]], 0.8)
 })
 
 test_that("legacy tracked outputs are removed", {

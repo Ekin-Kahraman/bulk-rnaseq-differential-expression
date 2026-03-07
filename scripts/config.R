@@ -7,7 +7,8 @@ analysis_config <- list(
   de_padj_cutoff = 0.05,
   de_lfc_cutoff = 1,
   volcano_label_padj_cutoff = 0.001,
-  volcano_label_lfc_cutoff = 2
+  volcano_label_lfc_cutoff = 2,
+  sensitivity_label_count = 10L
 )
 
 is_truthy_env <- function(name, default = FALSE) {

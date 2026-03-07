@@ -5,23 +5,24 @@
 [![DOI](https://zenodo.org/badge/1142001317.svg)](https://doi.org/10.5281/zenodo.18432519)
 [![CI](https://github.com/Ekin-Kahraman/bulk-rnaseq-differential-expression/actions/workflows/ci.yml/badge.svg)](https://github.com/Ekin-Kahraman/bulk-rnaseq-differential-expression/actions/workflows/ci.yml)
 
-Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, PCA, ~1,900 DE genes, ISG enrichment, and mechanistic interpretation of antiviral host responses.
+Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, shrunken-effect DE analysis, pathway enrichment, and robustness benchmarking against the full QC-passed cohort.
 
 ## Highlights
 
 - Processed GEO [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075) (n=484 nasopharyngeal swabs) → balanced subset (n=60) for robust DE analysis
-- Identified **1,902 DE genes** (FDR < 0.05, |log₂FC| > 1), dominated by interferon-stimulated genes (IFIT1/2/3, OAS3, DDX58)
-- Enriched pathways: GO "response to virus", KEGG "Coronavirus disease – COVID-19" (FDR = 1.5×10<sup>-40</sup>)
-- Full reproducible R workflow (DESeq2, clusterProfiler) with modular scripts and fixed seeds
-- Results align with Lieberman *et al.* (2020), who reported viral-load-dependent ISG induction
+- Identified **1,902 thresholded DE genes** in the balanced subset (FDR < 0.05, |log₂FC| > 1), dominated by canonical interferon-stimulated genes
+- Full-cohort sensitivity analysis identified **4,371 thresholded DE genes**, with **1,314** shared with the balanced analysis and **99.7%** effect-direction concordance
+- Enriched pathways: GO "response to virus", KEGG "Coronavirus disease – COVID-19" (FDR = 4.5×10<sup>-39</sup>)
+- Raw and shrunken DE outputs, analysis summary metrics, and git/session provenance are generated automatically
 
 ## Methods Overview
 
 - Bulk RNA-seq preprocessing and quality control
-- Differential expression modelling with DESeq2
+- Differential expression modelling with DESeq2 plus `apeglm` log2 fold-change shrinkage
 - Variance-stabilising transformation (VST) for visualisation
 - Functional enrichment analysis (GO/KEGG)
-- Reproducible analysis workflow (pinned dependencies via `renv`, fixed random seeds)
+- Full-cohort robustness benchmark against the balanced subset
+- Reproducible analysis workflow (pinned dependencies via `renv`, fixed seeds, git/session provenance)
 
 ## Dataset
 
@@ -39,7 +40,7 @@ Lieberman NAP, Peddu V, Xie H, Shrestha L, Huang M-L, Mears MC, *et al.* (2020)
 | Total samples | 484 (430 positive, 54 negative) |
 | Analysis subset | 60 (30 per group, balanced) |
 
-Balanced subset controls for class imbalance and viral load heterogeneity. Subsampling uses `set.seed(123)` for reproducibility.
+Balanced subset controls for class imbalance and viral load heterogeneity. Subsampling uses `set.seed(123)` for reproducibility, and a separate full-cohort sensitivity analysis quantifies how much of the inferred signal persists outside the balanced subset.
 
 ## Results
 
@@ -61,21 +62,13 @@ PC1 (33% variance) partially separates infected from control samples. Overlap re
 
 ![Volcano Plot](results/figures/volcano_plot.png)
 
-**1,902 DE genes** (FDR < 0.05, |log₂FC| > 1): 1,099 upregulated, 803 downregulated
+**1,902 thresholded DE genes** (FDR < 0.05, |log₂FC| > 1): 1,099 upregulated, 803 downregulated
 
-Results dominated by interferon-stimulated genes (ISGs) characteristic of antiviral immunity.
+Results are dominated by interferon-stimulated genes (ISGs) characteristic of antiviral immunity. Ranking and volcano visualization use shrunken log2 fold changes to stabilize effect-size estimates for lower-count genes while preserving the raw significance calls.
 
-### Top ISGs by Effect Size
+### Representative Induced Genes
 
-| Gene | Function | log₂FC | FDR |
-|:-----|:---------|-------:|----:|
-| IFIT1 | Translation inhibitor | 3.5 | <10<sup>-20</sup> |
-| IFIT2 | Translation inhibitor | 3.2 | <10<sup>-18</sup> |
-| IFIT3 | Translation inhibitor | 3.1 | <10<sup>-17</sup> |
-| OAS3 | 2'-5'-Oligoadenylate synthetase | 3.0 | <10<sup>-17</sup> |
-| CXCL10 | IFN-inducible chemokine | 2.9 | <10<sup>-20</sup> |
-| DDX58 | RIG-I (viral RNA sensor) | 2.8 | <10<sup>-19</sup> |
-| GBP1 | Guanylate-binding protein | 2.7 | <10<sup>-19</sup> |
+The most consistently induced genes include **IFIT1/2/3, CXCL10, DDX58, GBP1, OAS3, XAF1, and SIGLEC1**. These genes anchor the interpretation around interferon signaling, viral RNA sensing, and downstream antiviral effector programs rather than isolated single-gene effects.
 
 ### Model Diagnostics
 
@@ -107,6 +100,12 @@ Top GO terms: cytoplasmic translation, response to virus, defense response to vi
 
 Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 4.5×10<sup>-39</sup>), followed by NOD-like receptor signalling.
 
+### Robustness Check
+
+![Sensitivity Scatter](results/figures/sensitivity_lfc_scatter.png)
+
+The full QC-passed cohort analysis (n=484) identified **4,371 thresholded DE genes**. Of these, **1,314** overlap with the balanced-subset DE set, with **99.7%** shared effect-direction concordance and a Spearman correlation of **0.816** between shrunken effect sizes across all shared genes. This indicates that the balanced subset sharpens contrast but does not invert the core biological signal.
+
 ### ISG Signalling Cascade
 
 ![Pathway Diagram](results/figures/pathway_diagram.png)
@@ -115,7 +114,9 @@ Schematic of RIG-I → IFN → ISG antiviral cascade. Viral RNA detection by DDX
 
 ## Biological Interpretation
 
-The transcriptional signature is consistent with innate antiviral immunity. DDX58 (RIG-I) detects viral RNA, signalling proceeds via MAVS/TBK1/IRF3/7, and type I interferon responses induce canonical ISGs (including IFIT1/2/3, OAS3, and CXCL10). This pattern is expected in acute infection and supports the observed enrichment of antiviral pathways.
+The dominant signal is an **upper-airway interferon-driven antiviral host response**. Canonical ISGs such as IFIT1/2/3, OAS3, DDX58, CXCL10, GBP1, and SIGLEC1 support activation of RNA-sensing and interferon-response programs that are expected during acute viral infection. The pathway results reinforce this reading, with strong enrichment for antiviral and coronavirus-associated gene sets.
+
+At the same time, the interpretation should stay conservative. This signature is **consistent with** acute SARS-CoV-2 infection in nasopharyngeal samples, but it is not uniquely SARS-CoV-2-specific and should not be read as proof of cell-intrinsic mechanism or direct pathway activation in every cell type. The balanced subset was chosen to reduce class imbalance and viral-load heterogeneity; the new full-cohort sensitivity analysis shows that the main direction of effect is highly stable, which makes the interpretation stronger, but the biological claims should still be framed as a robust host-response signature rather than a definitive mechanistic model.
 
 ## Quick Start
 ```sh
@@ -126,13 +127,14 @@ Rscript 000_install_dependencies.R
 Rscript run_all.R
 ```
 
-Analysis runtime: ~0.5 min after data download (~2GB).
+Analysis runtime: ~1.7 min after data download (~2GB).
 
 ### Notes
 - To re-download the GEO dataset (otherwise the pipeline reuses existing `data/*.rds` outputs): `FORCE_DOWNLOAD=true Rscript scripts/00_get_data.R`
 - To continue without KEGG results when the KEGG service is unavailable: `ALLOW_KEGG_FAILURE=true Rscript scripts/06_enrichment.R`
 - Lint: `Rscript dev/lint.R`
 - Tests: `Rscript -e 'testthat::test_dir("tests/testthat")'`
+- Benchmark + design notes: see `WORKFLOW_BENCHMARK.md`
 - Reproducibility details (expected outputs, network requirements): see `REPRODUCIBILITY.md`
 
 ## Data and Code Availability
@@ -171,6 +173,7 @@ bulk-rnaseq-differential-expression/
 ├── 000_install_dependencies.R   # Install all required packages
 ├── CITATION.cff
 ├── REPRODUCIBILITY.md
+├── WORKFLOW_BENCHMARK.md
 ├── dev/
 │   ├── lint.R                   # Lint scripts/ via lintr
 │   └── snapshot_lockfile.R      # Maintainer-only renv.lock refresh
@@ -189,6 +192,7 @@ bulk-rnaseq-differential-expression/
 │   ├── 06_enrichment.R
 │   ├── 07_reproducibility.R
 │   ├── 08_pathway_diagram.R
+│   ├── 09_sensitivity_analysis.R
 │   └── config.R                 # Shared analysis thresholds and helpers
 ├── data/
 │   └── [RDS files]
@@ -212,6 +216,7 @@ source("scripts/05_model_diagnostics.R")
 source("scripts/06_enrichment.R")
 source("scripts/07_reproducibility.R")
 source("scripts/08_pathway_diagram.R")
+source("scripts/09_sensitivity_analysis.R")
 ```
 
 ## Methods
@@ -225,9 +230,14 @@ source("scripts/08_pathway_diagram.R")
 ### Statistical Analysis
 - Normalisation: DESeq2 median-of-ratios
 - Transformation: Variance-stabilising transformation (VST) for visualisation
-- Dispersion: Empirical Bayes shrinkage
+- Effect-size stabilisation: `apeglm` shrinkage for ranking/visualisation
 - Testing: Wald test with Benjamini-Hochberg correction
 - Thresholds: FDR < 0.05, |log₂FC| > 1 (chosen after testing >0.58 and >1.5; this gave the cleanest ISG-dominant signal)
+
+### Robustness Analysis
+- Secondary DE run on the full QC-passed cohort (n = 484)
+- Summary outputs written to `results/tables/full_cohort_deseq2_results.csv` and `results/tables/analysis_summary.csv`
+- Effect-size concordance visualised in `results/figures/sensitivity_lfc_scatter.png`
 
 ### Enrichment Analysis
 - Gene ID conversion: Symbol → Entrez (96% mapped)
@@ -237,9 +247,10 @@ source("scripts/08_pathway_diagram.R")
 ## Limitations
 
 - Nasopharyngeal samples only; may not reflect lower respiratory tract
-- Subset analysis reduces power but improves class balance (full cohort runs showed noisier PCA from viral-load imbalance)
+- Primary inference still uses a simple `~ condition` design without explicit age/sex/viral-load covariates
+- The balanced subset improves comparability, but the full cohort remains heterogeneous and likely reflects cell-composition shifts as well as transcriptional regulation
 - Cross-sectional design; no temporal dynamics
-- Future extensions: full cohort analysis, batch correction assessment, or integration with scRNA-seq
+- Future extensions: covariate-aware modelling, batch correction assessment, cell-type deconvolution, or integration with scRNA-seq
 
 ## Requirements
 

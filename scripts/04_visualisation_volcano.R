@@ -7,11 +7,11 @@ library(ggplot2)
 library(ggrepel)
 library(dplyr)
 
-if (!file.exists("results/tables/deseq2_results.csv")) {
-  stop("File not found: results/tables/deseq2_results.csv. Run scripts/03_deseq2.R first.")
+if (!file.exists("results/tables/deseq2_results_shrunken.csv")) {
+  stop("File not found: results/tables/deseq2_results_shrunken.csv. Run scripts/03_deseq2.R first.")
 }
 
-res <- read.csv("results/tables/deseq2_results.csv", stringsAsFactors = FALSE)
+res <- read.csv("results/tables/deseq2_results_shrunken.csv", stringsAsFactors = FALSE)
 
 res <- res %>%
   filter(!is.na(padj), !is.na(log2FoldChange)) %>%
@@ -29,8 +29,18 @@ top_genes <- res %>%
     padj < analysis_config$volcano_label_padj_cutoff,
     abs(log2FoldChange) > analysis_config$volcano_label_lfc_cutoff
   ) %>%
-  arrange(padj) %>%
+  arrange(padj, desc(abs(log2FoldChange))) %>%
   head(10)
+
+if (nrow(top_genes) < 10) {
+  top_genes <- res %>%
+    filter(
+      padj < analysis_config$de_padj_cutoff,
+      abs(log2FoldChange) > analysis_config$de_lfc_cutoff
+    ) %>%
+    arrange(padj, desc(abs(log2FoldChange))) %>%
+    head(10)
+}
 
 message("Labelling ", nrow(top_genes), " genes: ", paste(top_genes$gene, collapse = ", "))
 
@@ -46,6 +56,7 @@ ggplot(res, aes(log2FoldChange, -log10(padj))) +
     aes(label = gene),
     size = 3.5,
     fontface = "italic",
+    seed = analysis_config$sample_seed,
     max.overlaps = 20,
     box.padding = 0.5,
     segment.color = "grey50"
@@ -58,7 +69,7 @@ ggplot(res, aes(log2FoldChange, -log10(padj))) +
   ) +
   labs(
     title = "Differential Expression in SARS-CoV-2 Infection",
-    x = "log2 Fold Change",
+    x = "Shrunken log2 Fold Change",
     y = "-log10 Adjusted P-value",
     color = NULL
   ) +

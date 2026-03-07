@@ -83,5 +83,7 @@ jobs:
         run: >
           git diff --exit-code --
           results/figures/qc_library_size.png
+          results/figures/ma_plot.png
           results/figures/pca_plot.png
+          results/figures/sensitivity_lfc_scatter.png
           results/figures/volcano_plot.png

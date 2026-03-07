@@ -6,6 +6,7 @@ This repository is set up so a reviewer can reproduce the analysis with a small 
 - **Code**: analysis scripts in `scripts/` and an orchestrator in `run_all.R`.
 - **Version pinning**: `renv.lock` pins CRAN + Bioconductor package versions.
 - **Pre-computed outputs**: key figures and tables are committed under `results/` for convenience and quick verification.
+- **Analysis summary**: `results/tables/analysis_summary.csv` captures the main counts used in the narrative.
 
 ## From a clean checkout (recommended)
 Run these commands from the repository root (i.e., a fresh clone):
@@ -46,14 +47,18 @@ ALLOW_KEGG_FAILURE=true Rscript scripts/06_enrichment.R
 ```
 
 ## Determinism
-The balanced subset selection uses a fixed seed (`set.seed(123)` in `scripts/01_qc.R`) so repeated runs should yield the same subset and downstream results, given the same package versions.
+The balanced subset selection uses a fixed seed (`set.seed(123)` in `scripts/01_qc.R`) so repeated runs should yield the same subset and downstream results, given the same package versions. Figure label placement for `ggrepel`-based figures is also seeded, and `results/session_info.txt` now records the active git commit, branch, and analysis configuration.
 
 ## Expected Outputs
 After a successful run, you should see (among others):
 - `results/tables/deseq2_results.csv`
+- `results/tables/deseq2_results_shrunken.csv`
+- `results/tables/full_cohort_deseq2_results.csv`
+- `results/tables/analysis_summary.csv`
 - `results/figures/volcano_plot.png`
+- `results/figures/sensitivity_lfc_scatter.png`
 - `results/figures/pca_plot.png`
-- `results/session_info.txt` (records R + package versions for the run)
+- `results/session_info.txt` (records R, package versions, git commit, and config for the run)
 
 ## Verification Commands
 ```sh
@@ -68,3 +73,5 @@ Rscript dev/lint.R
 ```
 
 GitHub Actions also performs a clean rebuild of the tracked analysis outputs and checks that regenerated key outputs match the committed versions.
+
+For a workflow-level comparison against DESeq2, nf-core/rnaseq, `targets`, and `workflowr`, see `WORKFLOW_BENCHMARK.md`.

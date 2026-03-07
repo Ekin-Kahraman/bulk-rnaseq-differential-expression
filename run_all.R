@@ -4,9 +4,9 @@
 message("\n=== SARS-CoV-2 Host Response Analysis ===\n")
 
 # Check dependencies
-required <- c("DESeq2", "edgeR", "GEOquery", "clusterProfiler", 
+required <- c("DESeq2", "edgeR", "GEOquery", "clusterProfiler",
               "org.Hs.eg.db", "enrichplot", "ggplot2", "dplyr", 
-              "pheatmap", "RColorBrewer", "ggrepel", "scales")
+              "pheatmap", "RColorBrewer", "ggrepel", "scales", "apeglm")
 
 missing <- required[!sapply(required, requireNamespace, quietly = TRUE)]
 if (length(missing) > 0) {
@@ -26,14 +26,15 @@ run_script <- function(script_path, step) {
   })
 }
 
-run_script("scripts/00_get_data.R", "1/8")
-run_script("scripts/01_qc.R", "2/8")
-run_script("scripts/02_pca.R", "3/8")
-run_script("scripts/03_deseq2.R", "4/8")
-run_script("scripts/04_visualisation_volcano.R", "5/8")
-run_script("scripts/05_model_diagnostics.R", "6/8")
-run_script("scripts/06_enrichment.R", "7/8")
-run_script("scripts/08_pathway_diagram.R", "8/8")
+run_script("scripts/00_get_data.R", "1/9")
+run_script("scripts/01_qc.R", "2/9")
+run_script("scripts/02_pca.R", "3/9")
+run_script("scripts/03_deseq2.R", "4/9")
+run_script("scripts/04_visualisation_volcano.R", "5/9")
+run_script("scripts/05_model_diagnostics.R", "6/9")
+run_script("scripts/06_enrichment.R", "7/9")
+run_script("scripts/09_sensitivity_analysis.R", "8/9")
+run_script("scripts/08_pathway_diagram.R", "9/9")
 
 
 run_script("scripts/07_reproducibility.R", "Session")
