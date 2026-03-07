@@ -2,7 +2,7 @@
 
 This repository is set up so a reviewer can reproduce the analysis with a small number of commands.
 
-## What’s Included
+## What's Included
 - **Code**: analysis scripts in `scripts/` and an orchestrator in `run_all.R`.
 - **Version pinning**: `renv.lock` pins CRAN + Bioconductor package versions.
 - **Pre-computed outputs**: key figures and tables are committed under `results/` for convenience and quick verification.

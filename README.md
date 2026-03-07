@@ -9,10 +9,10 @@ Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, shr
 
 ## Highlights
 
-- Processed GEO [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075) (n=484 nasopharyngeal swabs) → balanced subset (n=60) for robust DE analysis
+- Processed GEO [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075) (n = 484 nasopharyngeal swabs) to a balanced subset (n = 60) for the primary differential expression analysis
 - Identified **1,902 thresholded DE genes** in the balanced subset (FDR < 0.05, |log₂FC| > 1), dominated by canonical interferon-stimulated genes
 - Full-cohort sensitivity analysis identified **4,371 thresholded DE genes**, with **1,314** shared with the balanced analysis and **99.7%** effect-direction concordance
-- Enriched pathways: GO "response to virus", KEGG "Coronavirus disease – COVID-19" (FDR = 4.5×10<sup>-39</sup>)
+- Enriched pathways: GO "response to virus", KEGG "Coronavirus disease - COVID-19" (FDR = 4.5e-39)
 - Raw and shrunken DE outputs, analysis summary metrics, and git/session provenance are generated automatically
 
 ## Methods Overview
@@ -104,19 +104,19 @@ Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 4.5×10<sup>-39</sup
 
 ![Sensitivity Scatter](results/figures/sensitivity_lfc_scatter.png)
 
-The full QC-passed cohort analysis (n=484) identified **4,371 thresholded DE genes**. Of these, **1,314** overlap with the balanced-subset DE set, with **99.7%** shared effect-direction concordance and a Spearman correlation of **0.816** between shrunken effect sizes across all shared genes. This indicates that the balanced subset sharpens contrast but does not invert the core biological signal.
+The full QC-passed cohort analysis (n = 484) identified **4,371 thresholded DE genes**. Of these, **1,314** overlap with the balanced-subset DE set, with **99.7%** shared effect-direction concordance and a Spearman correlation of **0.816** between shrunken effect sizes across shared genes. The balanced subset therefore increases contrast, but the main direction of effect is preserved in the larger cohort.
 
 ### ISG Signalling Cascade
 
 ![Pathway Diagram](results/figures/pathway_diagram.png)
 
-Schematic of RIG-I → IFN → ISG antiviral cascade. Viral RNA detection by DDX58 (RIG-I) triggers interferon production and downstream activation of antiviral effectors.
+Schematic of the RIG-I -> IFN -> ISG antiviral cascade. Viral RNA detection by DDX58 (RIG-I) triggers interferon production and downstream activation of antiviral effectors.
 
 ## Biological Interpretation
 
-The dominant signal is an **upper-airway interferon-driven antiviral host response**. Canonical ISGs such as IFIT1/2/3, OAS3, DDX58, CXCL10, GBP1, and SIGLEC1 support activation of RNA-sensing and interferon-response programs that are expected during acute viral infection. The pathway results reinforce this reading, with strong enrichment for antiviral and coronavirus-associated gene sets.
+The transcriptional profile is consistent with an upper-airway interferon-driven antiviral host response. Canonical ISGs such as IFIT1/2/3, OAS3, DDX58, CXCL10, GBP1, and SIGLEC1 support activation of RNA-sensing and interferon-response programs expected during acute viral infection. The pathway results are consistent with the same interpretation, with strong enrichment for antiviral and coronavirus-associated gene sets.
 
-At the same time, the interpretation should stay conservative. This signature is **consistent with** acute SARS-CoV-2 infection in nasopharyngeal samples, but it is not uniquely SARS-CoV-2-specific and should not be read as proof of cell-intrinsic mechanism or direct pathway activation in every cell type. The balanced subset was chosen to reduce class imbalance and viral-load heterogeneity; the new full-cohort sensitivity analysis shows that the main direction of effect is highly stable, which makes the interpretation stronger, but the biological claims should still be framed as a robust host-response signature rather than a definitive mechanistic model.
+The interpretation should remain conservative. This signature is consistent with acute SARS-CoV-2 infection in nasopharyngeal samples, but it is not uniquely SARS-CoV-2-specific and should not be interpreted as direct proof of cell-intrinsic mechanism or pathway activation in every cell type. The balanced subset was chosen to reduce class imbalance and viral-load heterogeneity. The full-cohort sensitivity analysis shows that the direction of effect is highly stable, which strengthens the inference, but the biological claims should remain framed as a robust host-response signature rather than a definitive mechanistic model.
 
 ## Quick Start
 ```sh
@@ -134,7 +134,7 @@ Analysis runtime: ~1.7 min after data download (~2GB).
 - To continue without KEGG results when the KEGG service is unavailable: `ALLOW_KEGG_FAILURE=true Rscript scripts/06_enrichment.R`
 - Lint: `Rscript dev/lint.R`
 - Tests: `Rscript -e 'testthat::test_dir("tests/testthat")'`
-- Benchmark + design notes: see `WORKFLOW_BENCHMARK.md`
+- Workflow benchmark: see `WORKFLOW_BENCHMARK.md`
 - Reproducibility details (expected outputs, network requirements): see `REPRODUCIBILITY.md`
 
 ## Data and Code Availability
@@ -232,7 +232,7 @@ source("scripts/09_sensitivity_analysis.R")
 - Transformation: Variance-stabilising transformation (VST) for visualisation
 - Effect-size stabilisation: `apeglm` shrinkage for ranking/visualisation
 - Testing: Wald test with Benjamini-Hochberg correction
-- Thresholds: FDR < 0.05, |log₂FC| > 1 (chosen after testing >0.58 and >1.5; this gave the cleanest ISG-dominant signal)
+- Thresholds: FDR < 0.05, |log₂FC| > 1 for the reported summaries; full results tables are provided for alternative thresholding
 
 ### Robustness Analysis
 - Secondary DE run on the full QC-passed cohort (n = 484)
@@ -240,7 +240,7 @@ source("scripts/09_sensitivity_analysis.R")
 - Effect-size concordance visualised in `results/figures/sensitivity_lfc_scatter.png`
 
 ### Enrichment Analysis
-- Gene ID conversion: Symbol → Entrez (96% mapped)
+- Gene ID conversion: Symbol to Entrez (96% mapped)
 - GO: Biological Process, BH-corrected
 - KEGG: Human pathways (hsa)
 
