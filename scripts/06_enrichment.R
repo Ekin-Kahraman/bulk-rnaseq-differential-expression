@@ -1,6 +1,8 @@
 #!/usr/bin/env Rscript
 # Functional enrichment analysis: GO and KEGG pathways
 
+source("scripts/config.R", local = TRUE)
+
 library(clusterProfiler)
 library(org.Hs.eg.db)
 library(ggplot2)
@@ -18,13 +20,24 @@ dir.create("results/tables", recursive = TRUE, showWarnings = FALSE)
 
 message("Running enrichment analysis...")
 
+allow_kegg_failure <- is_truthy_env("ALLOW_KEGG_FAILURE")
+
 sig_genes <- res_df %>%
-  filter(padj < 0.05, abs(log2FoldChange) > 1) %>%
+  filter(
+    padj < analysis_config$de_padj_cutoff,
+    abs(log2FoldChange) > analysis_config$de_lfc_cutoff
+  ) %>%
   pull(gene)
 sig_genes <- unique(sig_genes)
 
-n_up <- sum(res_df$padj < 0.05 & res_df$log2FoldChange > 1, na.rm = TRUE)
-n_down <- sum(res_df$padj < 0.05 & res_df$log2FoldChange < -1, na.rm = TRUE)
+n_up <- sum(
+  res_df$padj < analysis_config$de_padj_cutoff & res_df$log2FoldChange > analysis_config$de_lfc_cutoff,
+  na.rm = TRUE
+)
+n_down <- sum(
+  res_df$padj < analysis_config$de_padj_cutoff & res_df$log2FoldChange < -analysis_config$de_lfc_cutoff,
+  na.rm = TRUE
+)
 
 message(length(sig_genes), " DE genes (", n_up, " up, ", n_down, " down)")
 if (length(sig_genes) == 0) {
@@ -69,6 +82,7 @@ if (nrow(go_df) > 0) {
   ggsave("results/figures/go_dotplot.png", p1, width = 10, height = 9, dpi = 300)
 }
 
+kegg_error <- NULL
 kegg <- tryCatch(
   enrichKEGG(
     gene = gene_map$ENTREZID,
@@ -78,7 +92,7 @@ kegg <- tryCatch(
     qvalueCutoff = 0.1
   ),
   error = function(e) {
-    warning("KEGG enrichment unavailable (network/service issue): ", conditionMessage(e))
+    kegg_error <<- conditionMessage(e)
     NULL
   }
 )
@@ -98,6 +112,17 @@ if (!is.null(kegg)) {
   }
 }
 write.csv(kegg_df, "results/tables/kegg_pathways.csv", row.names = FALSE)
+
+if (is.null(kegg) && !is.null(kegg_error)) {
+  if (allow_kegg_failure) {
+    warning("KEGG enrichment unavailable; continuing without KEGG outputs: ", kegg_error)
+  } else {
+    stop(
+      "KEGG enrichment unavailable: ", kegg_error,
+      "\nSet ALLOW_KEGG_FAILURE=true to continue without KEGG outputs."
+    )
+  }
+}
 
 if (nrow(go_df) > 0) {
   message("\nTop GO terms:")

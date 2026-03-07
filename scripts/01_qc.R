@@ -1,6 +1,8 @@
 #!/usr/bin/env Rscript
 # Quality control: filter samples and genes, normalize for visualization
 
+source("scripts/config.R", local = TRUE)
+
 library(DESeq2)
 library(edgeR)
 library(ggplot2)
@@ -43,14 +45,14 @@ ggplot(qc_data, aes(condition, library_size)) +
 
 ggsave("results/figures/qc_library_size.png", width = 6, height = 5, dpi = 300)
 
-keep <- qc_data$library_size > 1e5
+keep <- qc_data$library_size > analysis_config$min_library_size
 counts <- counts[, keep, drop = FALSE]
 metadata <- metadata[keep, , drop = FALSE]
 
 message(sum(keep), " samples passed QC")
 
-set.seed(123)
-n <- 30
+set.seed(analysis_config$sample_seed)
+n <- analysis_config$samples_per_group
 pos_samples <- rownames(metadata)[metadata$condition == "positive"]
 neg_samples <- rownames(metadata)[metadata$condition == "negative"]
 target_n <- min(n, length(pos_samples), length(neg_samples))
@@ -77,7 +79,7 @@ if (any(duplicated(rownames(counts)))) {
   message("Collapsed ", n_dup, " duplicates")
 }
 
-keep_genes <- rowSums(cpm(counts) >= 1) >= 10
+keep_genes <- rowSums(cpm(counts) >= analysis_config$gene_cpm_cutoff) >= analysis_config$gene_min_samples
 counts <- counts[keep_genes, , drop = FALSE]
 
 message(nrow(counts), " genes retained after filtering")

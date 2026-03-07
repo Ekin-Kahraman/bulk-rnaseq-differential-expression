@@ -14,6 +14,7 @@ find_project_root <- function() {
 }
 
 root <- find_project_root()
+source(file.path(root, "scripts/config.R"), local = TRUE)
 
 test_that("DESeq2 results CSV exists and is well-formed", {
   path <- file.path(root, "results/tables/deseq2_results.csv")
@@ -24,9 +25,10 @@ test_that("DESeq2 results CSV exists and is well-formed", {
   required_cols <- c("gene", "baseMean", "log2FoldChange", "lfcSE", "stat", "pvalue", "padj")
   expect_true(all(required_cols %in% names(res)))
 
-  expect_gt(nrow(res), 0)
+  expect_gt(nrow(res), 1000)
   expect_true(any(!is.na(res$padj)))
   expect_true(all(nchar(res$gene) > 0))
+  expect_gt(sum(res$padj < analysis_config$de_padj_cutoff, na.rm = TRUE), 0)
 
   pvals <- res$pvalue[!is.na(res$pvalue)]
   expect_true(length(pvals) > 0)
@@ -49,4 +51,22 @@ test_that("key derived tables exist", {
   expect_true(file.exists(top_genes))
   expect_true(file.exists(go_terms))
   expect_true(file.exists(kegg_terms))
+
+  top_df <- read.csv(top_genes, stringsAsFactors = FALSE)
+  go_df <- read.csv(go_terms, stringsAsFactors = FALSE)
+  kegg_df <- read.csv(kegg_terms, stringsAsFactors = FALSE)
+
+  expect_true(all(c("gene", "log2FoldChange", "padj", "baseMean") %in% names(top_df)))
+  expect_gt(nrow(top_df), 0)
+
+  expect_true(all(c("Description", "p.adjust", "Count") %in% names(go_df)))
+  expect_gt(nrow(go_df), 0)
+
+  expect_true(all(c("Description", "p.adjust", "Count") %in% names(kegg_df)))
+  expect_gt(nrow(kegg_df), 0)
+})
+
+test_that("legacy tracked outputs are removed", {
+  legacy <- file.path(root, "results/tables/top_volcano_genes.csv")
+  expect_false(file.exists(legacy))
 })

@@ -11,11 +11,17 @@ This repository is set up so a reviewer can reproduce the analysis with a small 
 Run these commands from the repository root (i.e., a fresh clone):
 
 ```sh
-# Restore/install pinned dependencies (CRAN + Bioconductor)
+# Restore/install pinned dependencies from renv.lock
 Rscript 000_install_dependencies.R
 
 # Run the full pipeline (downloads data if needed, then regenerates results)
 Rscript run_all.R
+```
+
+Maintainers who intentionally change dependencies should refresh the lockfile explicitly:
+
+```sh
+Rscript dev/snapshot_lockfile.R
 ```
 
 ## Data Download Behaviour
@@ -33,6 +39,11 @@ Some steps require network access:
 - KEGG pathway annotation (via KEGG REST) in `scripts/06_enrichment.R`
 
 If you are running in a restricted environment, these steps may fail until network access is available.
+If KEGG is temporarily unavailable and you still want the pipeline to continue locally, run:
+
+```sh
+ALLOW_KEGG_FAILURE=true Rscript scripts/06_enrichment.R
+```
 
 ## Determinism
 The balanced subset selection uses a fixed seed (`set.seed(123)` in `scripts/01_qc.R`) so repeated runs should yield the same subset and downstream results, given the same package versions.
@@ -49,9 +60,11 @@ After a successful run, you should see (among others):
 # Check environment consistency against renv.lock
 Rscript -e 'renv::status()'
 
-# Run smoke tests (validates presence/shape of committed artifacts)
+# Run output validation tests
 Rscript -e 'testthat::test_dir("tests/testthat")'
 
 # Lint the analysis scripts
 Rscript dev/lint.R
 ```
+
+GitHub Actions also performs a clean rebuild of the tracked analysis outputs and checks that regenerated key outputs match the committed versions.

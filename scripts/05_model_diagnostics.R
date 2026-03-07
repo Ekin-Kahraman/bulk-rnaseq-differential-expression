@@ -1,6 +1,8 @@
 #!/usr/bin/env Rscript
 # Model diagnostics and quality control plots
 
+source("scripts/config.R", local = TRUE)
+
 library(DESeq2)
 library(pheatmap)
 library(ggplot2)
@@ -10,6 +12,9 @@ library(RColorBrewer)
 if (!file.exists("data/dds_object.rds")) {
   stop("File not found: data/dds_object.rds. Run scripts/03_deseq2.R first.")
 }
+if (!file.exists("data/deseq_results.rds")) {
+  stop("File not found: data/deseq_results.rds. Run scripts/03_deseq2.R first.")
+}
 if (!file.exists("data/vst_data.rds")) {
   stop("File not found: data/vst_data.rds. Run scripts/01_qc.R first.")
 }
@@ -18,6 +23,7 @@ if (!file.exists("results/tables/deseq2_results.csv")) {
 }
 
 dds <- readRDS("data/dds_object.rds")
+res <- readRDS("data/deseq_results.rds")
 vsd <- readRDS("data/vst_data.rds")
 res_df <- read.csv("results/tables/deseq2_results.csv")
 
@@ -25,10 +31,13 @@ dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
 
 message("Generating diagnostic plots...")
 
-res <- results(dds, contrast = c("condition", "positive", "negative"), alpha = 0.05)
 res_ma <- as.data.frame(res)
 res_ma$baseMean_log <- log10(res_ma$baseMean + 1)
-res_ma$sig <- ifelse(!is.na(res_ma$padj) & res_ma$padj < 0.05, "Significant", "NS")
+res_ma$sig <- ifelse(
+  !is.na(res_ma$padj) & res_ma$padj < analysis_config$de_padj_cutoff,
+  "Significant",
+  "NS"
+)
 
 png("results/figures/ma_plot.png", width = 7, height = 6, units = "in", res = 300, bg = "white")
 print(ggplot(res_ma, aes(x = baseMean_log, y = log2FoldChange, color = sig)) +

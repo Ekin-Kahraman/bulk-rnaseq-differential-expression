@@ -97,7 +97,7 @@ Hierarchical clustering of top 50 DE genes shows consistent expression patterns 
 
 ### Pathway Enrichment
 
-**529 GO Biological Process terms** and **28 KEGG pathways** significantly enriched (FDR < 0.05).
+**529 GO Biological Process terms** and **26 KEGG pathways** significantly enriched (FDR < 0.05).
 
 ![GO Enrichment](results/figures/go_dotplot.png)
 
@@ -105,7 +105,7 @@ Top GO terms: cytoplasmic translation, response to virus, defense response to vi
 
 ![KEGG Enrichment](results/figures/kegg_dotplot.png)
 
-Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 1.5×10<sup>-40</sup>), followed by NOD-like receptor signalling.
+Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 4.5×10<sup>-39</sup>), followed by NOD-like receptor signalling.
 
 ### ISG Signalling Cascade
 
@@ -130,6 +130,7 @@ Analysis runtime: ~0.5 min after data download (~2GB).
 
 ### Notes
 - To re-download the GEO dataset (otherwise the pipeline reuses existing `data/*.rds` outputs): `FORCE_DOWNLOAD=true Rscript scripts/00_get_data.R`
+- To continue without KEGG results when the KEGG service is unavailable: `ALLOW_KEGG_FAILURE=true Rscript scripts/06_enrichment.R`
 - Lint: `Rscript dev/lint.R`
 - Tests: `Rscript -e 'testthat::test_dir("tests/testthat")'`
 - Reproducibility details (expected outputs, network requirements): see `REPRODUCIBILITY.md`
@@ -150,6 +151,11 @@ Rscript dev/lint.R
 Rscript -e 'testthat::test_dir("tests/testthat")'
 ```
 
+Maintainers updating dependencies should refresh the lockfile explicitly:
+```sh
+Rscript dev/snapshot_lockfile.R
+```
+
 ## Citation Metadata
 - Zenodo DOI: `10.5281/zenodo.18432519`
 - For citation tooling, see `CITATION.cff`
@@ -166,7 +172,8 @@ bulk-rnaseq-differential-expression/
 ├── CITATION.cff
 ├── REPRODUCIBILITY.md
 ├── dev/
-│   └── lint.R                   # Lint scripts/ via lintr
+│   ├── lint.R                   # Lint scripts/ via lintr
+│   └── snapshot_lockfile.R      # Maintainer-only renv.lock refresh
 ├── renv/
 │   ├── activate.R
 │   └── settings.json
@@ -181,7 +188,8 @@ bulk-rnaseq-differential-expression/
 │   ├── 05_model_diagnostics.R
 │   ├── 06_enrichment.R
 │   ├── 07_reproducibility.R
-│   └── 08_pathway_diagram.R
+│   ├── 08_pathway_diagram.R
+│   └── config.R                 # Shared analysis thresholds and helpers
 ├── data/
 │   └── [RDS files]
 ├── results/
@@ -240,6 +248,8 @@ This project uses `renv` for reproducible dependencies. Install/restore everythi
 ```sh
 Rscript 000_install_dependencies.R
 ```
+
+This command restores the pinned project library only; it does not modify `renv.lock`.
 
 ### Manual installation (optional)
 If you prefer to install packages manually instead of using `renv`:

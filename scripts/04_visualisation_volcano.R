@@ -1,6 +1,8 @@
 #!/usr/bin/env Rscript
 # Volcano plot visualisation of differential expression results
 
+source("scripts/config.R", local = TRUE)
+
 library(ggplot2)
 library(ggrepel)
 library(dplyr)
@@ -15,15 +17,18 @@ res <- res %>%
   filter(!is.na(padj), !is.na(log2FoldChange)) %>%
   mutate(
     sig = case_when(
-      padj >= 0.05 ~ "NS",
-      log2FoldChange > 1 ~ "Up",
-      log2FoldChange < -1 ~ "Down",
+      padj >= analysis_config$de_padj_cutoff ~ "NS",
+      log2FoldChange > analysis_config$de_lfc_cutoff ~ "Up",
+      log2FoldChange < -analysis_config$de_lfc_cutoff ~ "Down",
       TRUE ~ "Marginal"
     )
   )
 
 top_genes <- res %>%
-  filter(padj < 0.001, abs(log2FoldChange) > 2) %>%
+  filter(
+    padj < analysis_config$volcano_label_padj_cutoff,
+    abs(log2FoldChange) > analysis_config$volcano_label_lfc_cutoff
+  ) %>%
   arrange(padj) %>%
   head(10)
 
@@ -45,8 +50,12 @@ ggplot(res, aes(log2FoldChange, -log10(padj))) +
     box.padding = 0.5,
     segment.color = "grey50"
   ) +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey40") +
-  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "grey40") +
+  geom_hline(yintercept = -log10(analysis_config$de_padj_cutoff), linetype = "dashed", color = "grey40") +
+  geom_vline(
+    xintercept = c(-analysis_config$de_lfc_cutoff, analysis_config$de_lfc_cutoff),
+    linetype = "dashed",
+    color = "grey40"
+  ) +
   labs(
     title = "Differential Expression in SARS-CoV-2 Infection",
     x = "log2 Fold Change",
