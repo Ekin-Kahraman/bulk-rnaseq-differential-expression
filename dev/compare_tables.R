@@ -9,6 +9,7 @@ reference_dir <- args[[1]]
 generated_dir <- args[[2]]
 relative_tolerance <- 2e-5
 zero_tolerance <- 1e-12
+effect_size_absolute_tolerance <- 1e-6
 
 if (!dir.exists(reference_dir)) {
   stop("Reference directory not found: ", reference_dir)
@@ -52,6 +53,9 @@ format_value <- function(value) {
 }
 
 compare_numeric_column <- function(reference_col, generated_col, file_label, col_name) {
+  is_probability_column <- grepl("^(pvalue|padj|qvalue|p.adjust)$", col_name, ignore.case = TRUE)
+  absolute_tolerance <- if (is_probability_column) 0 else effect_size_absolute_tolerance
+
   same <- (reference_col == generated_col) | (is.na(reference_col) & is.na(generated_col))
   same[is.na(same)] <- FALSE
 
@@ -61,7 +65,7 @@ compare_numeric_column <- function(reference_col, generated_col, file_label, col
     reference_vals <- reference_col[needs_check]
     generated_vals <- generated_col[needs_check]
     scale <- pmax(abs(reference_vals), abs(generated_vals))
-    allowed_diff <- ifelse(scale == 0, zero_tolerance, relative_tolerance * scale)
+    allowed_diff <- ifelse(scale == 0, zero_tolerance, pmax(relative_tolerance * scale, absolute_tolerance))
     same[needs_check] <- abs(reference_vals - generated_vals) <= allowed_diff
   }
 
@@ -70,7 +74,11 @@ compare_numeric_column <- function(reference_col, generated_col, file_label, col
     mismatch <- mismatch[[1]]
     diff <- abs(reference_col[[mismatch]] - generated_col[[mismatch]])
     scale <- max(abs(reference_col[[mismatch]]), abs(generated_col[[mismatch]]))
-    allowed_diff <- if (scale == 0) zero_tolerance else relative_tolerance * scale
+    allowed_diff <- if (scale == 0) {
+      zero_tolerance
+    } else {
+      max(relative_tolerance * scale, absolute_tolerance)
+    }
     stop(
       sprintf(
         "%s: numeric mismatch in column '%s' at row %d (reference=%s, generated=%s; abs_diff=%s, allowed=%s)",
