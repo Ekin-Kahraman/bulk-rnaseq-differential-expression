@@ -72,6 +72,6 @@ Rscript -e 'testthat::test_dir("tests/testthat")'
 Rscript dev/lint.R
 ```
 
-GitHub Actions also performs a clean rebuild of the tracked analysis outputs and checks that regenerated key outputs match the committed versions.
+GitHub Actions also performs a clean rebuild of the tracked analysis outputs, compares regenerated tables against the committed versions, and checks that key figures were regenerated successfully.
 
 For a workflow-level comparison against DESeq2, nf-core/rnaseq, `targets`, and `workflowr`, see `WORKFLOW_BENCHMARK.md`.

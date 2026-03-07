@@ -167,7 +167,7 @@ Rscript dev/snapshot_lockfile.R
 bulk-rnaseq-differential-expression/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml               # CI (renv status, lint, tests)
+│       └── ci.yml               # CI (renv status, lint, tests, rebuild validation)
 ├── .lintr                       # lintr configuration
 ├── .Rprofile                    # renv autoloader
 ├── 000_install_dependencies.R   # Install all required packages

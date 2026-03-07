@@ -14,7 +14,7 @@ This repository starts from a published GEO count matrix, so the benchmark below
 - DE effect estimation: raw DESeq2 inference plus `apeglm`-shrunken log2 fold changes for ranking, MA plotting, and volcano visualization.
 - Robustness: balanced-subset analysis is benchmarked against the full QC-passed cohort, with overlap and concordance written to `results/tables/analysis_summary.csv`.
 - Reproducibility: `renv`-pinned environment, deterministic seeds, GitHub Actions rebuilds, and explicit git/session provenance in `results/session_info.txt`.
-- Artifact validation: tracked tables are rebuilt in CI and compared against committed results; key figures are also diff-checked.
+- Artifact validation: tracked tables are rebuilt in CI and compared against committed results; key figures are checked for successful regeneration.
 
 ## Remaining gaps relative to broader workflows
 
