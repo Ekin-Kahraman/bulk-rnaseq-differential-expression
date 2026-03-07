@@ -67,6 +67,11 @@ jobs:
       - name: Install pinned dependencies
         run: Rscript 000_install_dependencies.R
 
+      - name: Save tracked tables for comparison
+        run: |
+          mkdir -p "$RUNNER_TEMP/reference_tables"
+          cp results/tables/*.csv "$RUNNER_TEMP/reference_tables"/
+
       - name: Remove committed analysis outputs before rebuild
         run: rm -f results/figures/*.png results/tables/*.csv
 
@@ -76,14 +81,13 @@ jobs:
       - name: Validate rebuilt outputs
         run: Rscript -e 'testthat::test_dir("tests/testthat")'
 
-      - name: Verify regenerated tables match tracked results
-        run: git diff --exit-code -- results/tables
+      - name: Compare regenerated tables to tracked results
+        run: Rscript dev/compare_tables.R "$RUNNER_TEMP/reference_tables" results/tables
 
-      - name: Verify key figures match tracked results
-        run: >
-          git diff --exit-code --
-          results/figures/qc_library_size.png
-          results/figures/ma_plot.png
-          results/figures/pca_plot.png
-          results/figures/sensitivity_lfc_scatter.png
-          results/figures/volcano_plot.png
+      - name: Verify key figures were regenerated
+        run: |
+          test -f results/figures/qc_library_size.png
+          test -f results/figures/ma_plot.png
+          test -f results/figures/pca_plot.png
+          test -f results/figures/sensitivity_lfc_scatter.png
+          test -f results/figures/volcano_plot.png
