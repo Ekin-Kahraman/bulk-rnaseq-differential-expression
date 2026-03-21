@@ -13,6 +13,9 @@ Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, shr
 - Identified **1,902 thresholded DE genes** in the balanced subset (FDR < 0.05, |log₂FC| > 1), dominated by canonical interferon-stimulated genes
 - Full-cohort sensitivity analysis identified **4,371 thresholded DE genes**, with **1,314** shared with the balanced analysis and **99.7%** effect-direction concordance
 - Enriched pathways: GO "response to virus", KEGG "Coronavirus disease - COVID-19" (FDR = 4.5e-39)
+- **Novel: Viral load stratification** — COVID-positive samples stratified by N1 Ct value to test whether high and low viral load patients activate distinct immune programs, with ISG expression correlated against continuous viral load
+- **Novel: Sex-stratified interaction analysis** — Condition-by-sex interaction model identifies genes with sex-differential transcriptional responses to SARS-CoV-2, relevant to observed male-biased COVID-19 mortality
+- Extracts full GEO covariates (viral load Ct, age, sex, sequencing batch) for covariate-aware analyses
 - Raw and shrunken DE outputs, analysis summary metrics, and git/session provenance are generated automatically
 
 ## Methods Overview
@@ -22,6 +25,8 @@ Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, shr
 - Variance-stabilising transformation (VST) for visualisation
 - Functional enrichment analysis (GO/KEGG)
 - Full-cohort robustness benchmark against the balanced subset
+- Viral load stratification: median-split DE analysis of high vs low viral load patients
+- Sex-stratified interaction model: `~ condition * gender` to identify sex-differential host responses
 - Reproducible analysis workflow (pinned dependencies via `renv`, fixed seeds, git/session provenance)
 
 ## Dataset
@@ -105,6 +110,30 @@ Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 4.5×10<sup>-39</sup
 ![Sensitivity Scatter](results/figures/sensitivity_lfc_scatter.png)
 
 The full QC-passed cohort analysis (n = 484) identified **4,371 thresholded DE genes**. Of these, **1,314** overlap with the balanced-subset DE set, with **99.7%** shared effect-direction concordance and a Spearman correlation of **0.816** between shrunken effect sizes across shared genes. The balanced subset therefore increases contrast, but the main direction of effect is preserved in the larger cohort.
+
+### Viral Load Stratification (Novel)
+
+![Ct Distribution](results/figures/viral_load_ct_distribution.png)
+
+COVID-positive samples stratified by median N1 Ct value into high viral load (low Ct) and low viral load (high Ct) groups. DE analysis between groups tests the hypothesis that high and low viral load patients activate distinct immune programs.
+
+![Viral Load Volcano](results/figures/viral_load_volcano.png)
+
+Genes differentially expressed between high and low viral load groups. Upregulated genes in the high viral load group are expected to include interferon-stimulated genes (ISGs), consistent with dose-dependent innate immune activation.
+
+![ISG vs Viral Load](results/figures/viral_load_isg_correlation.png)
+
+Continuous correlation between N1 Ct value and ISG expression. Negative slopes indicate higher expression with higher viral load (lower Ct), supporting a viral-load-dependent interferon response gradient rather than a binary on/off activation.
+
+### Sex-Stratified Analysis (Novel)
+
+![PCA by Sex](results/figures/pca_sex_stratified.png)
+
+PCA of samples coloured by infection status and shaped by sex, visualising potential sex-dependent clustering in the host transcriptional response.
+
+![Sex Interaction Volcano](results/figures/sex_interaction_volcano.png)
+
+Genes with significant condition-by-sex interaction (FDR < 0.05), representing genes where the transcriptional response to SARS-CoV-2 differs between males and females. This is clinically relevant given the approximately 1.7-fold higher COVID-19 mortality in males (Peckham *et al.*, 2020).
 
 ### ISG Signalling Cascade
 
@@ -193,6 +222,8 @@ bulk-rnaseq-differential-expression/
 │   ├── 07_reproducibility.R
 │   ├── 08_pathway_diagram.R
 │   ├── 09_sensitivity_analysis.R
+│   ├── 10_viral_load_stratification.R  # Novel: high vs low viral load DE
+│   ├── 11_sex_stratified_analysis.R    # Novel: condition * gender interaction
 │   └── config.R                 # Shared analysis thresholds and helpers
 ├── data/
 │   └── [RDS files]
@@ -217,6 +248,8 @@ source("scripts/06_enrichment.R")
 source("scripts/07_reproducibility.R")
 source("scripts/08_pathway_diagram.R")
 source("scripts/09_sensitivity_analysis.R")
+source("scripts/10_viral_load_stratification.R")
+source("scripts/11_sex_stratified_analysis.R")
 ```
 
 ## Methods
@@ -247,10 +280,12 @@ source("scripts/09_sensitivity_analysis.R")
 ## Limitations
 
 - Nasopharyngeal samples only; may not reflect lower respiratory tract
-- Primary inference still uses a simple `~ condition` design without explicit age/sex/viral-load covariates
+- Primary inference uses `~ condition`; covariate-aware analyses (viral load, sex) are provided as secondary explorations
+- Viral load stratification uses a median split, which loses information compared to continuous modelling
+- Sex-stratified interaction model may be underpowered for smaller subgroups
 - The balanced subset improves comparability, but the full cohort remains heterogeneous and likely reflects cell-composition shifts as well as transcriptional regulation
 - Cross-sectional design; no temporal dynamics
-- Future extensions: covariate-aware modelling, batch correction assessment, cell-type deconvolution, or integration with scRNA-seq
+- Future extensions: batch correction assessment, cell-type deconvolution, or integration with scRNA-seq
 
 ## Requirements
 

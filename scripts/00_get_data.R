@@ -48,11 +48,32 @@ if (!force_download && file.exists(counts_out) && file.exists(metadata_out)) {
   gse <- getGEO(GEO_ID, GSEMatrix = TRUE)
   pheno <- pData(gse[[1]])
 
-  positivity <- pheno$characteristics_ch1
+  # --- Extract all available covariates from GEO characteristics ---
+  # GSE152075 provides: positivity, n1_ct (viral load), age, gender, batch
+
+  parse_characteristic <- function(pheno_data, pattern, col_name) {
+    # Search all characteristics_ch1.* columns for the pattern
+    char_cols <- grep("^characteristics_ch1", colnames(pheno_data), value = TRUE)
+    values <- rep(NA_character_, nrow(pheno_data))
+    for (col in char_cols) {
+      matches <- grepl(pattern, pheno_data[[col]], ignore.case = TRUE)
+      extracted <- sub(paste0(".*", pattern, "\\s*"), "", pheno_data[[col]][matches],
+                       ignore.case = TRUE)
+      values[matches] <- trimws(extracted)
+    }
+    values
+  }
+
+  positivity <- parse_characteristic(pheno, "positivity:", "condition")
   condition <- ifelse(
-    grepl("positivity:\\s*pos", positivity, ignore.case = TRUE), "positive",
-    ifelse(grepl("positivity:\\s*neg", positivity, ignore.case = TRUE), "negative", NA)
+    grepl("pos", positivity, ignore.case = TRUE), "positive",
+    ifelse(grepl("neg", positivity, ignore.case = TRUE), "negative", NA)
   )
+
+  viral_load_ct <- as.numeric(parse_characteristic(pheno, "n1_ct:", "n1_ct"))
+  age <- as.integer(parse_characteristic(pheno, "age:", "age"))
+  gender <- parse_characteristic(pheno, "gender:", "gender")
+  batch <- parse_characteristic(pheno, "sequencing_batch:", "batch")
 
   n_na <- sum(is.na(condition))
   if (n_na > 0) {
@@ -77,11 +98,17 @@ if (!force_download && file.exists(counts_out) && file.exists(metadata_out)) {
   metadata <- data.frame(
     sample_id = sample_ids,
     condition = condition,
+    viral_load_ct = viral_load_ct,
+    age = age,
+    gender = gender,
+    batch = batch,
     row.names = sample_ids,
     stringsAsFactors = FALSE
   )
 
   metadata$condition <- factor(metadata$condition, levels = c("negative", "positive"))
+  metadata$gender <- factor(metadata$gender)
+  metadata$batch <- factor(metadata$batch)
 
   common <- intersect(colnames(raw_counts), rownames(metadata))
   if (length(common) == 0) {
@@ -111,6 +138,9 @@ if (!force_download && file.exists(counts_out) && file.exists(metadata_out)) {
 
   message(sum(metadata$condition == "negative"), " negative, ",
           sum(metadata$condition == "positive"), " positive")
+  message("Covariates extracted: viral_load_ct (", sum(!is.na(metadata$viral_load_ct)),
+          " non-NA), age (", sum(!is.na(metadata$age)),
+          " non-NA), gender (", sum(!is.na(metadata$gender)), " non-NA)")
 
   saveRDS(raw_counts, counts_out)
   saveRDS(metadata, metadata_out)
