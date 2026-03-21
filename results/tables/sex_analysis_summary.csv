@@ -1,0 +1,2 @@
+"total_samples","female_n","male_n","comparison","genes_tested","sig_genes_fdr05","male_biased","female_biased"
+431,231,200,"Condition x Sex Interaction",20534,12,9,3
