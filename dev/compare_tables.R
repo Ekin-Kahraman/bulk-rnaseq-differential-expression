@@ -7,7 +7,7 @@ if (length(args) != 2) {
 
 reference_dir <- args[[1]]
 generated_dir <- args[[2]]
-relative_tolerance <- 5e-4  # 0.05% — allows cross-platform floating point drift in DESeq2
+relative_tolerance <- 1e-3  # 0.1% — cross-platform DESeq2 drift (macOS vs Linux CI)
 zero_tolerance <- 1e-12
 effect_size_absolute_tolerance <- 1e-6
 
