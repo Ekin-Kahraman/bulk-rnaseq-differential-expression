@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# Novel analysis: Viral load stratification
+# Extended analysis: Viral load stratification
 #
 # Hypothesis: High and low viral load patients activate distinct immune programs.
 # Specifically, high viral load (low Ct) may drive stronger interferon signaling,

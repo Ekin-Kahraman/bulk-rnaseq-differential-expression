@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# Novel analysis: Sex-stratified host response
+# Extended analysis: Sex-stratified host response
 #
 # Hypothesis: Males and females mount distinct transcriptional responses to
 # SARS-CoV-2, which may contribute to the observed sex disparity in COVID-19
