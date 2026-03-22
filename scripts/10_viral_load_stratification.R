@@ -131,8 +131,8 @@ p_volcano <- ggplot(plot_df, aes(log2FoldChange, -log10(pvalue), color = signifi
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", alpha = 0.4) +
   labs(title = "Differential Expression: High vs Low Viral Load",
        subtitle = paste0(n_up, " up / ", n_down, " down in high viral load (FDR < 0.05, |log2FC| > 1)"),
-       x = expression(log[2]~"Fold Change (High VL / Low VL)"),
-       y = expression(-log[10]~"p-value"),
+       x = expression(log[2] ~ "Fold Change (High VL / Low VL)"),
+       y = expression(-log[10] ~ "p-value"),
        color = NULL) +
   theme_classic(base_size = 12) +
   theme(legend.position = "top")

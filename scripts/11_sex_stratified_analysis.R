@@ -126,8 +126,8 @@ p_volcano <- ggplot(plot_df, aes(log2FoldChange, -log10(pvalue), color = signifi
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", alpha = 0.4) +
   labs(title = paste0("Sex-Stratified DE: ", comparison_label),
        subtitle = paste0(n_sig, " genes with sex-differential response (FDR < 0.05)"),
-       x = expression(log[2]~"Fold Change"),
-       y = expression(-log[10]~"p-value"),
+       x = expression(log[2] ~ "Fold Change"),
+       y = expression(-log[10] ~ "p-value"),
        color = NULL) +
   theme_classic(base_size = 12) +
   theme(legend.position = "top")
