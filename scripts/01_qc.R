@@ -62,6 +62,14 @@ if (any(duplicated(rownames(counts)))) {
 saveRDS(counts, "data/counts_qc.rds")
 saveRDS(metadata, "data/metadata_qc.rds")
 
+# Filter to samples with non-NA gender for covariate-adjusted model
+has_gender <- !is.na(metadata$gender)
+if (sum(!has_gender) > 0) {
+  message("Excluding ", sum(!has_gender), " samples with missing gender annotation")
+  metadata <- metadata[has_gender, , drop = FALSE]
+  counts <- counts[, rownames(metadata), drop = FALSE]
+}
+
 set.seed(analysis_config$sample_seed)
 n <- analysis_config$samples_per_group
 pos_samples <- rownames(metadata)[metadata$condition == "positive"]
@@ -92,7 +100,7 @@ message("Final: ", sum(metadata$condition == "negative"), " neg, ",
 saveRDS(counts, "data/counts_clean.rds")
 saveRDS(metadata, "data/metadata_clean.rds")
 
-dds <- DESeqDataSetFromMatrix(counts, metadata, design = ~ condition)
+dds <- DESeqDataSetFromMatrix(counts, metadata, design = ~ condition + gender)
 vsd <- varianceStabilizingTransformation(dds, blind = TRUE)
 saveRDS(vsd, "data/vst_data.rds")
 

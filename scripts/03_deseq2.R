@@ -21,7 +21,7 @@ metadata <- readRDS("data/metadata_clean.rds")
 
 message("Testing ", nrow(counts), " genes across ", ncol(counts), " samples")
 
-dds <- DESeqDataSetFromMatrix(counts, metadata, design = ~ condition)
+dds <- DESeqDataSetFromMatrix(counts, metadata, design = ~ condition + gender)
 dds$condition <- relevel(dds$condition, ref = "negative")
 
 dds <- DESeq(dds)

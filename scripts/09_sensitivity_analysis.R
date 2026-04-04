@@ -29,6 +29,15 @@ if (!requireNamespace("apeglm", quietly = TRUE)) {
 
 counts_qc <- readRDS("data/counts_qc.rds")
 metadata_qc <- readRDS("data/metadata_qc.rds")
+
+# Filter to samples with non-NA gender (matching the balanced subset model)
+has_gender <- !is.na(metadata_qc$gender)
+if (sum(!has_gender) > 0) {
+  message("Excluding ", sum(!has_gender), " full-cohort samples with missing gender annotation")
+  metadata_qc <- metadata_qc[has_gender, , drop = FALSE]
+  counts_qc <- counts_qc[, rownames(metadata_qc), drop = FALSE]
+}
+
 balanced_raw <- read.csv("results/tables/deseq2_results.csv", stringsAsFactors = FALSE)
 balanced_shrunk <- read.csv("results/tables/deseq2_results_shrunken.csv", stringsAsFactors = FALSE)
 go_df <- read.csv("results/tables/go_biological_process.csv", stringsAsFactors = FALSE)
@@ -38,7 +47,7 @@ counts_balanced <- readRDS("data/counts_clean.rds")
 keep_genes_full <- rowSums(cpm(counts_qc) >= analysis_config$gene_cpm_cutoff) >= analysis_config$gene_min_samples
 counts_full <- counts_qc[keep_genes_full, , drop = FALSE]
 
-dds_full <- DESeqDataSetFromMatrix(counts_full, metadata_qc, design = ~ condition)
+dds_full <- DESeqDataSetFromMatrix(counts_full, metadata_qc, design = ~ condition + gender)
 dds_full$condition <- relevel(dds_full$condition, ref = "negative")
 dds_full <- DESeq(dds_full)
 

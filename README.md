@@ -33,7 +33,7 @@ GSE152075 (n=484, GEO)
  02 PCA ─────────── VST (blind=TRUE) → PCA for sample-level exploratory analysis
     │
     ▼
- 03 DE ──────────── Balanced subset (n=60) → DESeq2 (~ condition) → apeglm shrinkage
+ 03 DE ──────────── Balanced subset (n=60) → DESeq2 (~ condition + gender) → apeglm shrinkage
     │
     ├──→ 04 Sensitivity ─── Full cohort (n=484) DE → concordance check (99.7% sign agreement)
     ├──→ 05 Diagnostics ─── Cook's distance, dispersion, MA, volcano, scree
@@ -48,7 +48,7 @@ GSE152075 (n=484, GEO)
 ## Methods Overview
 
 - Bulk RNA-seq preprocessing and quality control
-- Differential expression modelling with DESeq2 plus `apeglm` log2 fold-change shrinkage
+- Differential expression modelling with DESeq2 (`~ condition + gender`) plus `apeglm` log2 fold-change shrinkage
 - Variance-stabilising transformation (VST) for visualisation
 - Functional enrichment analysis (GO/KEGG)
 - Full-cohort robustness benchmark against the balanced subset
