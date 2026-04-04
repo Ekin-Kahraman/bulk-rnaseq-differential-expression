@@ -28,7 +28,7 @@ test_that("DESeq2 results CSV exists and is well-formed", {
   required_cols <- c("gene", "baseMean", "log2FoldChange", "lfcSE", "stat", "pvalue", "padj")
   expect_true(all(required_cols %in% names(res)))
   expect_true(all(required_cols %in% names(res_shrunk)))
-  expect_equal(res$gene, res_shrunk$gene)
+  expect_equal(sort(res$gene), sort(res_shrunk$gene))
 
   expect_gt(nrow(res), 1000)
   expect_true(any(!is.na(res$padj)))

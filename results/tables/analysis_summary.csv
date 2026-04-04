@@ -1,2 +1,2 @@
 "qc_samples_total","balanced_samples_total","balanced_genes_tested","full_cohort_genes_tested","balanced_sig_genes","balanced_threshold_genes","full_cohort_sig_genes","full_cohort_threshold_genes","shared_threshold_genes","balanced_only_threshold_genes","full_only_threshold_genes","shared_sign_concordance","shrunken_lfc_spearman","go_terms_enriched","kegg_pathways_enriched"
-484,60,14220,20824,2001,1902,5969,4371,1314,588,2808,0.997,0.8162,529,26
+484,60,14220,20824,1839,1773,5883,4378,1266,507,2846,0.9984,0.8123,397,23
