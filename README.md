@@ -18,6 +18,33 @@ Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, shr
 - Extracts full GEO covariates (viral load Ct, age, sex, sequencing batch) for covariate-aware analyses
 - Raw and shrunken DE outputs, analysis summary metrics, and git/session provenance are generated automatically
 
+## Workflow
+
+```
+GSE152075 (n=484, GEO)
+    │
+    ▼
+ 00 Download ────── Fetch counts + metadata from GEO, extract covariates (Ct, age, sex, batch)
+    │
+    ▼
+ 01 QC ──────────── Library size filtering (>100k reads), gene filtering (CPM ≥1 in ≥10 samples)
+    │
+    ▼
+ 02 PCA ─────────── VST (blind=TRUE) → PCA for sample-level exploratory analysis
+    │
+    ▼
+ 03 DE ──────────── Balanced subset (n=60) → DESeq2 (~ condition) → apeglm shrinkage
+    │
+    ├──→ 04 Sensitivity ─── Full cohort (n=484) DE → concordance check (99.7% sign agreement)
+    ├──→ 05 Diagnostics ─── Cook's distance, dispersion, MA, volcano, scree
+    ├──→ 06 Enrichment ──── GO/KEGG via clusterProfiler (top: "Coronavirus disease", FDR=4.5e-39)
+    ├──→ 08 Viral load ──── High/low Ct stratification → independent DE + ISG-Ct correlation
+    └──→ 09 Sex interaction ── ~ condition * gender → 12 sex-biased genes (9 male, 3 female)
+         │
+         ▼
+      07 Provenance ──── Git commit, session info, config, package versions → REPRODUCIBILITY.md
+```
+
 ## Methods Overview
 
 - Bulk RNA-seq preprocessing and quality control
