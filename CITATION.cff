@@ -4,7 +4,7 @@ title: "SARS-CoV-2 Host Response in Nasopharyngeal RNA-seq (GSE152075)"
 type: software
 license: MIT
 repository-code: "https://github.com/Ekin-Kahraman/bulk-rnaseq-differential-expression"
-doi: "10.5281/zenodo.18432519"
+doi: "10.5281/zenodo.19429954"
 keywords:
   - "bioinformatics"
   - "computational biology"
@@ -17,7 +17,7 @@ authors:
     given-names: "Ekin"
 preferred-citation:
   type: dataset
-  doi: "10.5281/zenodo.18432519"
+  doi: "10.5281/zenodo.19429954"
   title: "SARS-CoV-2 Host Response in Nasopharyngeal RNA-seq (GSE152075)"
   authors:
     - family-names: "Kahraman"
