@@ -11,7 +11,7 @@ Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, shr
 
 - Processed GEO [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075) (n = 484 nasopharyngeal swabs) to a balanced subset (n = 60) for the primary differential expression analysis
 - Identified **1,773 thresholded DE genes** in the balanced subset (FDR < 0.05, |log₂FC| > 1), dominated by canonical interferon-stimulated genes
-- Full-cohort sensitivity analysis identified **4,371 thresholded DE genes**, with **1,266** shared with the balanced analysis and **99.8%** effect-direction concordance
+- Full-cohort sensitivity analysis identified **4,378 thresholded DE genes**, with **1,266** shared with the balanced analysis and **99.8%** effect-direction concordance
 - Enriched pathways: GO "response to virus", KEGG "Coronavirus disease - COVID-19" (FDR = 4.5e-39)
 - **Extended: Viral load stratification** — COVID-positive samples stratified by N1 Ct value into high/low viral load groups with independent DE analysis and continuous ISG–Ct correlation, extending the original continuous regression approach with a group-comparison framework
 - **Extended: Sex-stratified interaction analysis** — Condition-by-sex interaction model (`~ condition * gender`) to identify genes with sex-differential transcriptional responses, complementing the original study's sex-adjusted analysis with a formal interaction test
@@ -136,7 +136,7 @@ Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 4.5×10<sup>-39</sup
 
 ![Sensitivity Scatter](results/figures/sensitivity_lfc_scatter.png)
 
-The full QC-passed cohort analysis (n = 484) identified **4,371 thresholded DE genes**. Of these, **1,314** overlap with the balanced-subset DE set, with **99.8%** shared effect-direction concordance and a Spearman correlation of **0.816** between shrunken effect sizes across shared genes. The balanced subset therefore increases contrast, but the main direction of effect is preserved in the larger cohort.
+The full QC-passed cohort analysis (n = 484) identified **4,378 thresholded DE genes**. Of these, **1,266** overlap with the balanced-subset DE set, with **99.8%** shared effect-direction concordance and a Spearman correlation of **0.812** between shrunken effect sizes across shared genes. The balanced subset therefore increases contrast, but the main direction of effect is preserved in the larger cohort.
 
 ### Viral Load Stratification (Extended)
 
