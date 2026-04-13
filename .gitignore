@@ -3,6 +3,7 @@
 .RData
 .RDataTmp*
 .Rproj.user/
+*.Rproj
 
 # Derived data
 data/raw/
