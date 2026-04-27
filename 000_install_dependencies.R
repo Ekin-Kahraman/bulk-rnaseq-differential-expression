@@ -25,12 +25,7 @@ if (!requireNamespace("renv", quietly = TRUE)) {
 message("Restoring packages from renv.lock...")
 renv::restore(prompt = FALSE)
 
-status_output <- capture.output(status <- renv::status(), type = "output")
-if (!isTRUE(status$synchronized)) {
-  if (length(status_output) > 0) {
-    message(paste(status_output, collapse = "\n"))
-  }
-  stop("renv restore completed, but the project library is still not synchronized.")
-}
+source("dev/renv_status.R")
+assert_renv_synchronized()
 
 message("\nDone. Run: Rscript run_all.R")
