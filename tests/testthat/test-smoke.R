@@ -96,6 +96,23 @@ test_that("key derived tables exist", {
   expect_gt(summary_df$shrunken_lfc_spearman[[1]], 0.8)
 })
 
+test_that("KEGG enrichment uses pinned human pathway references", {
+  links_path <- file.path(root, "data/reference/kegg_hsa_pathway_links.tsv")
+  names_path <- file.path(root, "data/reference/kegg_hsa_pathway_names.tsv")
+
+  expect_true(file.exists(links_path))
+  expect_true(file.exists(names_path))
+
+  links <- read.delim(links_path, header = FALSE, stringsAsFactors = FALSE)
+  names <- read.delim(names_path, header = FALSE, stringsAsFactors = FALSE)
+
+  expect_gt(nrow(links), 9000)
+  expect_gt(nrow(names), 300)
+  expect_true(all(grepl("^path:hsa", links[[1]])))
+  expect_true(all(grepl("^hsa:", links[[2]])))
+  expect_true(all(grepl("^hsa", names[[1]])))
+})
+
 test_that("legacy tracked outputs are removed", {
   legacy <- file.path(root, "results/tables/top_volcano_genes.csv")
   expect_false(file.exists(legacy))

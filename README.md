@@ -12,7 +12,7 @@ Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, shr
 - Processed GEO [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075) (n = 484 nasopharyngeal swabs) to a balanced subset (n = 60) for the primary differential expression analysis
 - Identified **1,773 thresholded DE genes** in the balanced subset (FDR < 0.05, |log₂FC| > 1), dominated by canonical interferon-stimulated genes
 - Full-cohort sensitivity analysis identified **4,378 thresholded DE genes**, with **1,266** shared with the balanced analysis and **99.8%** effect-direction concordance
-- Enriched pathways: GO "response to virus", KEGG "Coronavirus disease - COVID-19" (FDR = 2.9e-39)
+- Enriched pathways: GO "response to virus", KEGG "Coronavirus disease - COVID-19" (FDR = 4.5e-39)
 - **Extended: Viral load stratification** — COVID-positive samples stratified by N1 Ct value into high/low viral load groups with independent DE analysis and continuous ISG–Ct correlation, extending the original continuous regression approach with a group-comparison framework
 - **Extended: Sex-stratified interaction analysis** — Condition-by-sex interaction model (`~ condition * gender`) to identify genes with sex-differential transcriptional responses, complementing the original study's sex-adjusted analysis with a formal interaction test
 - Extracts full GEO covariates (viral load Ct, age, sex, sequencing batch) for covariate-aware analyses
@@ -37,7 +37,7 @@ GSE152075 (n=484, GEO)
     │
     ├──→ 04 Sensitivity ─── Full cohort (n=484) DE → concordance check (99.8% sign agreement)
     ├──→ 05 Diagnostics ─── Cook's distance, dispersion, MA, volcano, scree
-    ├──→ 06 Enrichment ──── GO/KEGG via clusterProfiler (top KEGG: "Coronavirus disease", FDR=2.9e-39)
+    ├──→ 06 Enrichment ──── GO/KEGG via clusterProfiler (top KEGG: "Coronavirus disease", FDR=4.5e-39)
     ├──→ 08 Viral load ──── High/low Ct stratification → independent DE + ISG-Ct correlation
     └──→ 09 Sex interaction ── ~ condition * gender → 12 sex-biased genes (9 male, 3 female)
          │
@@ -54,7 +54,7 @@ GSE152075 (n=484, GEO)
 - Full-cohort robustness benchmark against the balanced subset
 - Viral load stratification: median-split DE analysis of high vs low viral load patients
 - Sex-stratified interaction model: `~ condition * gender` to identify sex-differential host responses
-- Reproducible analysis workflow (pinned dependencies via `renv`, fixed seeds, git/session provenance)
+- Reproducible analysis workflow (pinned dependencies via `renv`, fixed seeds, pinned KEGG snapshot, git/session provenance)
 
 ## Dataset
 
@@ -130,7 +130,7 @@ Top GO terms: cytoplasmic translation, response to virus, defense response to vi
 
 ![KEGG Enrichment](results/figures/kegg_dotplot.png)
 
-Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 2.9×10<sup>-39</sup>), followed by Ribosome and NOD-like receptor signalling.
+Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 4.5×10<sup>-39</sup>), followed by Ribosome and NOD-like receptor signalling.
 
 ### Robustness Check
 
@@ -183,11 +183,11 @@ Rscript 000_install_dependencies.R
 Rscript run_all.R
 ```
 
-Analysis runtime: ~1.7 min after data download (~2GB).
+Analysis runtime: ~7-10 min after data download (~2GB), depending on CPU and CI runner load.
 
 ### Notes
 - To re-download the GEO dataset (otherwise the pipeline reuses existing `data/*.rds` outputs): `FORCE_DOWNLOAD=true Rscript scripts/00_get_data.R`
-- To continue without KEGG results when the KEGG service is unavailable: `ALLOW_KEGG_FAILURE=true Rscript scripts/06_enrichment.R`
+- KEGG enrichment uses the pinned human pathway snapshot in `data/reference/` so routine rebuilds do not silently change when KEGG updates upstream.
 - Lint: `Rscript dev/lint.R`
 - Tests: `Rscript -e 'testthat::test_dir("tests/testthat")'`
 - Workflow benchmark: see `WORKFLOW_BENCHMARK.md`

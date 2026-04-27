@@ -21,6 +21,38 @@ dir.create("results/tables", recursive = TRUE, showWarnings = FALSE)
 message("Running enrichment analysis...")
 
 allow_kegg_failure <- is_truthy_env("ALLOW_KEGG_FAILURE")
+kegg_links_path <- "data/reference/kegg_hsa_pathway_links.tsv"
+kegg_names_path <- "data/reference/kegg_hsa_pathway_names.tsv"
+
+load_kegg_reference <- function(links_path, names_path) {
+  if (!file.exists(links_path) || !file.exists(names_path)) {
+    stop(
+      "Pinned KEGG reference files are missing. Expected: ",
+      links_path, " and ", names_path,
+      "\nRefresh them deliberately rather than querying live KEGG in routine runs."
+    )
+  }
+
+  term2gene <- read.delim(
+    links_path,
+    header = FALSE,
+    col.names = c("pathway", "gene"),
+    stringsAsFactors = FALSE
+  )
+  term2name <- read.delim(
+    names_path,
+    header = FALSE,
+    col.names = c("pathway", "Description"),
+    stringsAsFactors = FALSE
+  )
+
+  term2gene$pathway <- sub("^path:", "", term2gene$pathway)
+  term2gene$gene <- sub("^hsa:", "", term2gene$gene)
+  term2name$pathway <- sub("^path:", "", term2name$pathway)
+  term2name$Description <- sub(" - Homo sapiens \\(human\\)$", "", term2name$Description)
+
+  list(term2gene = term2gene, term2name = term2name)
+}
 
 sig_genes <- res_df %>%
   filter(
@@ -83,19 +115,38 @@ if (nrow(go_df) > 0) {
 }
 
 kegg_error <- NULL
-kegg <- tryCatch(
-  enrichKEGG(
-    gene = gene_map$ENTREZID,
-    organism = "hsa",
-    pAdjustMethod = "BH",
-    pvalueCutoff = 0.05,
-    qvalueCutoff = 0.1
-  ),
+kegg_reference <- tryCatch(
+  load_kegg_reference(kegg_links_path, kegg_names_path),
   error = function(e) {
     kegg_error <<- conditionMessage(e)
     NULL
   }
 )
+
+kegg <- NULL
+if (!is.null(kegg_reference)) {
+  message(
+    "Using pinned KEGG hsa reference: ",
+    nrow(kegg_reference$term2gene),
+    " pathway-gene links across ",
+    nrow(kegg_reference$term2name),
+    " pathways"
+  )
+  kegg <- tryCatch(
+    enricher(
+      gene = gene_map$ENTREZID,
+      TERM2GENE = kegg_reference$term2gene,
+      TERM2NAME = kegg_reference$term2name,
+      pAdjustMethod = "BH",
+      pvalueCutoff = 0.05,
+      qvalueCutoff = 0.1
+    ),
+    error = function(e) {
+      kegg_error <<- conditionMessage(e)
+      NULL
+    }
+  )
+}
 
 kegg_df <- data.frame()
 if (!is.null(kegg)) {
