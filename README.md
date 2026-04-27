@@ -12,7 +12,7 @@ Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, shr
 - Processed GEO [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075) (n = 484 nasopharyngeal swabs) to a balanced subset (n = 60) for the primary differential expression analysis
 - Identified **1,773 thresholded DE genes** in the balanced subset (FDR < 0.05, |log₂FC| > 1), dominated by canonical interferon-stimulated genes
 - Full-cohort sensitivity analysis identified **4,378 thresholded DE genes**, with **1,266** shared with the balanced analysis and **99.8%** effect-direction concordance
-- Enriched pathways: GO "response to virus", KEGG "Coronavirus disease - COVID-19" (FDR = 4.5e-39)
+- Enriched pathways: GO "response to virus", KEGG "Coronavirus disease - COVID-19" (FDR = 2.9e-39)
 - **Extended: Viral load stratification** — COVID-positive samples stratified by N1 Ct value into high/low viral load groups with independent DE analysis and continuous ISG–Ct correlation, extending the original continuous regression approach with a group-comparison framework
 - **Extended: Sex-stratified interaction analysis** — Condition-by-sex interaction model (`~ condition * gender`) to identify genes with sex-differential transcriptional responses, complementing the original study's sex-adjusted analysis with a formal interaction test
 - Extracts full GEO covariates (viral load Ct, age, sex, sequencing batch) for covariate-aware analyses
@@ -37,7 +37,7 @@ GSE152075 (n=484, GEO)
     │
     ├──→ 04 Sensitivity ─── Full cohort (n=484) DE → concordance check (99.8% sign agreement)
     ├──→ 05 Diagnostics ─── Cook's distance, dispersion, MA, volcano, scree
-    ├──→ 06 Enrichment ──── GO/KEGG via clusterProfiler (top: "Coronavirus disease", FDR=4.5e-39)
+    ├──→ 06 Enrichment ──── GO/KEGG via clusterProfiler (top KEGG: "Coronavirus disease", FDR=2.9e-39)
     ├──→ 08 Viral load ──── High/low Ct stratification → independent DE + ISG-Ct correlation
     └──→ 09 Sex interaction ── ~ condition * gender → 12 sex-biased genes (9 male, 3 female)
          │
@@ -94,7 +94,7 @@ PC1 (33% variance) partially separates infected from control samples. Overlap re
 
 ![Volcano Plot](results/figures/volcano_plot.png)
 
-**1,773 thresholded DE genes** (FDR < 0.05, |log₂FC| > 1): 1,099 upregulated, 803 downregulated
+**1,773 thresholded DE genes** (FDR < 0.05, |log₂FC| > 1): 979 upregulated, 794 downregulated
 
 Results are dominated by interferon-stimulated genes (ISGs) characteristic of antiviral immunity. Ranking and volcano visualization use shrunken log2 fold changes to stabilize effect-size estimates for lower-count genes while preserving the raw significance calls.
 
@@ -122,7 +122,7 @@ Hierarchical clustering of top 50 DE genes shows consistent expression patterns 
 
 ### Pathway Enrichment
 
-**529 GO Biological Process terms** and **26 KEGG pathways** significantly enriched (FDR < 0.05).
+**397 GO Biological Process terms** and **23 KEGG pathways** significantly enriched (FDR < 0.05).
 
 ![GO Enrichment](results/figures/go_dotplot.png)
 
@@ -130,7 +130,7 @@ Top GO terms: cytoplasmic translation, response to virus, defense response to vi
 
 ![KEGG Enrichment](results/figures/kegg_dotplot.png)
 
-Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 4.5×10<sup>-39</sup>), followed by NOD-like receptor signalling.
+Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 2.9×10<sup>-39</sup>), followed by Ribosome and NOD-like receptor signalling.
 
 ### Robustness Check
 
