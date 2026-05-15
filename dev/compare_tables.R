@@ -19,7 +19,8 @@ if (!dir.exists(generated_dir)) {
 }
 
 list_csv_files <- function(path) {
-  sort(list.files(path, pattern = "\\.csv$", full.names = FALSE))
+  files <- sort(list.files(path, pattern = "\\.csv$", full.names = FALSE))
+  setdiff(files, "output_manifest.csv")
 }
 
 reference_files <- list_csv_files(reference_dir)
