@@ -17,6 +17,7 @@ Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, shr
 - **Extended: Sex-stratified interaction analysis** — Condition-by-sex interaction model (`~ condition * gender`) to identify genes with sex-differential transcriptional responses, complementing the original study's sex-adjusted analysis with a formal interaction test
 - Extracts full GEO covariates (viral load Ct, age, sex, sequencing batch) for covariate-aware analyses
 - Raw and shrunken DE outputs, analysis summary metrics, and git/session provenance are generated automatically
+- `results/tables/output_manifest.csv` records file sizes and checksums for committed figures and tables
 
 ## Workflow
 
@@ -42,7 +43,10 @@ GSE152075 (n=484, GEO)
     └──→ 09 Sex interaction ── ~ condition * gender → 12 sex-biased genes (9 male, 3 female)
          │
          ▼
-      07 Provenance ──── Git commit, session info, config, package versions → REPRODUCIBILITY.md
+      12 Manifest ────── File-size and checksum manifest for committed figures/tables
+         │
+         ▼
+      07 Provenance ──── Git commit, session info, config, package versions → results/session_info.txt
 ```
 
 ## Methods Overview
@@ -251,6 +255,7 @@ bulk-rnaseq-differential-expression/
 │   ├── 09_sensitivity_analysis.R
 │   ├── 10_viral_load_stratification.R  # Extended: high vs low viral load DE
 │   ├── 11_sex_stratified_analysis.R    # Extended: condition x gender interaction
+│   ├── 12_output_manifest.R     # Checksums for committed figures/tables
 │   └── config.R                 # Shared analysis thresholds and helpers
 ├── data/
 │   └── [RDS files]
@@ -277,6 +282,7 @@ source("scripts/08_pathway_diagram.R")
 source("scripts/09_sensitivity_analysis.R")
 source("scripts/10_viral_load_stratification.R")
 source("scripts/11_sex_stratified_analysis.R")
+source("scripts/12_output_manifest.R")
 ```
 
 ## Methods

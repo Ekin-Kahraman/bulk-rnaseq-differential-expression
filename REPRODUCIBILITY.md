@@ -7,6 +7,7 @@ This repository is set up so a reviewer can reproduce the analysis with a small 
 - **Version pinning**: `renv.lock` pins CRAN + Bioconductor package versions.
 - **Pre-computed outputs**: key figures and tables are committed under `results/` for convenience and quick verification.
 - **Analysis summary**: `results/tables/analysis_summary.csv` captures the main counts used in the narrative.
+- **Output manifest**: `results/tables/output_manifest.csv` records file sizes and MD5 checksums for committed figures and tables.
 - **Pinned pathway snapshot**: `data/reference/kegg_hsa_pathway_*.tsv` freezes the KEGG human pathway universe used by enrichment.
 
 ## From a clean checkout (recommended)
@@ -47,6 +48,7 @@ After a successful run, you should see (among others):
 - `results/tables/deseq2_results_shrunken.csv`
 - `results/tables/full_cohort_deseq2_results.csv`
 - `results/tables/analysis_summary.csv`
+- `results/tables/output_manifest.csv`
 - `results/figures/volcano_plot.png`
 - `results/figures/sensitivity_lfc_scatter.png`
 - `results/figures/pca_plot.png`

@@ -96,6 +96,24 @@ test_that("key derived tables exist", {
   expect_gt(summary_df$shrunken_lfc_spearman[[1]], 0.8)
 })
 
+test_that("output manifest tracks committed result artefacts", {
+  manifest_path <- file.path(root, "results/tables/output_manifest.csv")
+  expect_true(file.exists(manifest_path))
+
+  manifest <- read.csv(manifest_path, stringsAsFactors = FALSE)
+  expect_true(all(c("path", "bytes", "md5") %in% names(manifest)))
+  expect_gt(nrow(manifest), 20)
+  expect_true(all(file.exists(file.path(root, manifest$path))))
+  expect_true(all(manifest$bytes > 0))
+  expect_true(all(grepl("^[0-9a-f]{32}$", manifest$md5)))
+
+  actual_sizes <- file.info(file.path(root, manifest$path))$size
+  expect_equal(as.numeric(manifest$bytes), as.numeric(actual_sizes))
+  expect_true("results/tables/analysis_summary.csv" %in% manifest$path)
+  expect_true("results/figures/volcano_plot.png" %in% manifest$path)
+  expect_true("results/figures/sensitivity_lfc_scatter.png" %in% manifest$path)
+})
+
 test_that("KEGG enrichment uses pinned human pathway references", {
   links_path <- file.path(root, "data/reference/kegg_hsa_pathway_links.tsv")
   names_path <- file.path(root, "data/reference/kegg_hsa_pathway_names.tsv")
