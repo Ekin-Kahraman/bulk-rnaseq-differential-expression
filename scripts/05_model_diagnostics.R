@@ -102,6 +102,7 @@ top50 <- res_df %>%
 heatmap_mat <- assay(vsd)[top50, ]
 heatmap_mat <- t(scale(t(heatmap_mat)))
 heatmap_mat[is.na(heatmap_mat)] <- 0
+colnames(heatmap_mat) <- sample_labels
 
 pheatmap(
   heatmap_mat,
