@@ -13,8 +13,8 @@ Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, shr
 - Identified **1,773 thresholded DE genes** in the balanced subset (FDR < 0.05, |log₂FC| > 1), dominated by canonical interferon-stimulated genes
 - Full-cohort sensitivity analysis identified **4,378 thresholded DE genes**, with **1,266** shared with the balanced analysis and **99.8%** effect-direction concordance
 - Enriched pathways: GO "response to virus", KEGG "Coronavirus disease - COVID-19" (FDR = 4.5e-39)
-- **Extended: Viral load stratification** — COVID-positive samples stratified by N1 Ct value into high/low viral load groups with independent DE analysis and continuous ISG–Ct correlation, extending the original continuous regression approach with a group-comparison framework
-- **Extended: Sex-stratified interaction analysis** — Condition-by-sex interaction model (`~ condition * gender`) to identify genes with sex-differential transcriptional responses, complementing the original study's sex-adjusted analysis with a formal interaction test
+- **Extended: Viral load stratification** - COVID-positive samples stratified by N1 Ct value into high/low viral load groups with independent DE analysis and continuous ISG–Ct correlation, extending the original continuous regression approach with a group-comparison framework
+- **Extended: Sex-stratified interaction analysis** - Condition-by-sex interaction model (`~ condition * gender`) to identify genes with sex-differential transcriptional responses, complementing the original study's sex-adjusted analysis with a formal interaction test
 - Extracts full GEO covariates (viral load Ct, age, sex, sequencing batch) for covariate-aware analyses
 - Raw and shrunken DE outputs, analysis summary metrics, and git/session provenance are generated automatically
 - `results/tables/output_manifest.csv` records file sizes and checksums for committed figures and tables
