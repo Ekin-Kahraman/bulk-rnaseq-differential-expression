@@ -1,23 +1,21 @@
-# SARS-CoV-2 Host Response in Nasopharyngeal RNA-seq (GSE152075)
+# Gene-expression responses to COVID-19
 
 [![R](https://img.shields.io/badge/R-%E2%89%A54.0-blue)](https://www.r-project.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/1142001317.svg)](https://doi.org/10.5281/zenodo.19429954)
 [![CI](https://github.com/Ekin-Kahraman/bulk-rnaseq-differential-expression/actions/workflows/ci.yml/badge.svg)](https://github.com/Ekin-Kahraman/bulk-rnaseq-differential-expression/actions/workflows/ci.yml)
 
-Reproducible bulk RNA-seq differential expression pipeline using DESeq2: QC, shrunken-effect DE analysis, pathway enrichment, and robustness benchmarking against the full QC-passed cohort.
+Which genes and biological pathways differ between COVID-positive and negative
+nasal-swab samples? This reproducible R/DESeq2 analysis uses public RNA-seq data
+from GSE152075, with quality control, pathway analysis and sensitivity checks.
 
 ## Highlights
 
-- Processed GEO [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075) (n = 484 nasopharyngeal swabs) to a balanced subset (n = 60) for the primary differential expression analysis
-- Identified **1,773 thresholded DE genes** in the balanced subset (FDR < 0.05, |log₂FC| > 1), dominated by canonical interferon-stimulated genes
-- Full-cohort sensitivity analysis identified **4,378 thresholded DE genes**, with **1,266** shared with the balanced analysis and **99.8%** effect-direction concordance
-- Enriched pathways: GO "response to virus", KEGG "Coronavirus disease - COVID-19" (FDR = 4.5e-39)
-- **Extended: Viral load stratification** - COVID-positive samples stratified by N1 Ct value into high/low viral load groups with independent DE analysis and continuous ISG–Ct correlation, extending the original continuous regression approach with a group-comparison framework
-- **Extended: Sex-stratified interaction analysis** - Condition-by-sex interaction model (`~ condition * gender`) to identify genes with sex-differential transcriptional responses, complementing the original study's sex-adjusted analysis with a formal interaction test
-- Extracts full GEO covariates (viral load Ct, age, sex, sequencing batch) for covariate-aware analyses
-- Raw and shrunken DE outputs, analysis summary metrics, and git/session provenance are generated automatically
-- `results/tables/output_manifest.csv` records file sizes and checksums for committed figures and tables
+- **484 samples**, with 30 COVID-positive and 30 negative samples in the primary comparison.
+- **1,773 differentially expressed genes** meeting the stated thresholds, with a prominent interferon-related antiviral response.
+- **99.8% agreement in effect direction** among the 1,266 genes meeting thresholds in both the primary and full-cohort analyses. This is a sensitivity check, not independent validation.
+- Additional analyses explore associations with viral load and whether the infection-associated response differs by recorded sex.
+- Figures, result tables, software versions and file checksums are included for reproducibility.
 
 ## Workflow
 
@@ -39,7 +37,7 @@ GSE152075 (n=484, GEO)
     ├──→ 04 Sensitivity ─── Full cohort (n=484) DE → concordance check (99.8% sign agreement)
     ├──→ 05 Diagnostics ─── Cook's distance, dispersion, MA, volcano, scree
     ├──→ 06 Enrichment ──── GO/KEGG via clusterProfiler (top KEGG: "Coronavirus disease", FDR=4.5e-39)
-    ├──→ 08 Viral load ──── High/low Ct stratification → independent DE + ISG-Ct correlation
+    ├──→ 08 Viral load ──── High/low Ct stratification → separate DE + ISG-Ct correlation
     └──→ 09 Sex interaction ── ~ condition * gender → 12 sex-biased genes (9 male, 3 female)
          │
          ▼
@@ -76,7 +74,11 @@ Lieberman NAP, Peddu V, Xie H, Shrestha L, Huang M-L, Mears MC, *et al.* (2020)
 | Total samples | 484 (430 positive, 54 negative) |
 | Analysis subset | 60 (30 per group, balanced) |
 
-Balanced subset controls for class imbalance and viral load heterogeneity. Subsampling uses `set.seed(123)` for reproducibility, and a separate full-cohort sensitivity analysis quantifies how much of the inferred signal persists outside the balanced subset.
+The primary subset balances group sizes; sampling alone does not control viral
+load, age or other differences. Both primary and full-cohort models adjust for
+the recorded `gender` field. A fixed sampling seed supports reproducibility.
+The full-cohort analysis includes the primary samples, so it is not an
+independent replication.
 
 ## Results
 
@@ -84,13 +86,15 @@ Balanced subset controls for class imbalance and viral load heterogeneity. Subsa
 
 ![Library Size Distribution](results/figures/qc_library_size.png)
 
-Library sizes comparable between groups (median ~20M reads), supporting robust normalisation.
+Library sizes are broadly comparable between groups (median about 20 million reads).
 
 ### Principal Component Analysis
 
 ![PCA Plot](results/figures/pca_plot.png)
 
-PC1 (33% variance) partially separates infected from control samples. Overlap reflects biological heterogeneity in nasopharyngeal samples and variation in host immune activation. VST was applied to stabilise variance prior to PCA.
+The first principal component (33% of variance) partly separates infection groups.
+Overlap may reflect biological variation, cell composition and other sample
+differences. Counts were transformed before this exploratory analysis.
 
 ![PCA Scree Plot](results/figures/pca_scree.png)
 
@@ -140,7 +144,11 @@ Top KEGG pathway: **Coronavirus disease - COVID-19** (FDR = 4.5×10<sup>-39</sup
 
 ![Sensitivity Scatter](results/figures/sensitivity_lfc_scatter.png)
 
-The full QC-passed cohort analysis (n = 484) identified **4,378 thresholded DE genes**. Of these, **1,266** overlap with the balanced-subset DE set, with **99.8%** shared effect-direction concordance and a Spearman correlation of **0.812** between shrunken effect sizes across shared genes. The balanced subset therefore increases contrast, but the main direction of effect is preserved in the larger cohort.
+The full cohort (484 samples) yielded **4,378 genes** meeting the stated
+thresholds. Among the **1,266 genes shared** with the primary analysis, **99.8%**
+had the same direction of change; effect-size Spearman correlation was **0.812**.
+Agreement applies to this shared set, not all genes, and the two analyses use
+overlapping samples.
 
 ### Viral Load Stratification (Extended)
 
@@ -164,7 +172,10 @@ PCA of samples coloured by infection status and shaped by sex, visualising poten
 
 ![Sex Interaction Volcano](results/figures/sex_interaction_volcano.png)
 
-Genes with significant condition-by-sex interaction (FDR < 0.05), representing genes where the transcriptional response to SARS-CoV-2 differs between males and females. This is clinically relevant given the approximately 1.7-fold higher COVID-19 mortality in males (Peckham *et al.*, 2020).
+Genes meeting the interaction-test threshold (FDR < 0.05) are candidates for
+different infection-associated responses by recorded sex. Subgroup size and
+potential confounding limit interpretation; this analysis does not establish
+clinical risk or a causal sex-specific mechanism.
 
 ### ISG Signalling Cascade
 
@@ -176,9 +187,14 @@ Schematic of the RIG-I -> IFN -> ISG antiviral cascade. Viral RNA detection by D
 
 The transcriptional profile is consistent with an upper-airway interferon-driven antiviral host response. Canonical ISGs such as IFIT1/2/3, OAS3, DDX58, CXCL10, GBP1, and SIGLEC1 support activation of RNA-sensing and interferon-response programs expected during acute viral infection. The pathway results are consistent with the same interpretation, with strong enrichment for antiviral and coronavirus-associated gene sets.
 
-The interpretation should remain conservative. This signature is consistent with acute SARS-CoV-2 infection in nasopharyngeal samples, but it is not uniquely SARS-CoV-2-specific and should not be interpreted as direct proof of cell-intrinsic mechanism or pathway activation in every cell type. The balanced subset was chosen to reduce class imbalance and viral-load heterogeneity. The full-cohort sensitivity analysis shows that the direction of effect is highly stable, which strengthens the inference, but the biological claims should remain framed as a robust host-response signature rather than a definitive mechanistic model.
+The signature is consistent with an antiviral host response, but is not uniquely
+specific to SARS-CoV-2. Bulk measurements combine multiple cell types and cannot
+separate changes in cell abundance from changes within cells. Agreement between
+overlapping analyses supports consistency, not independent confirmation of a
+mechanism. The study is observational and does not establish causation.
 
 ## Quick Start
+
 ```sh
 # Install/restore dependencies (first time only)
 Rscript 000_install_dependencies.R
@@ -190,6 +206,7 @@ Rscript run_all.R
 Analysis runtime: ~7-10 min after data download (~2GB), depending on CPU and CI runner load.
 
 ### Notes
+
 - To re-download the GEO dataset (otherwise the pipeline reuses existing `data/*.rds` outputs): `FORCE_DOWNLOAD=true Rscript scripts/00_get_data.R`
 - KEGG enrichment uses the pinned human pathway snapshot in `data/reference/` so routine rebuilds do not silently change when KEGG updates upstream.
 - Lint: `Rscript dev/lint.R`
@@ -198,12 +215,14 @@ Analysis runtime: ~7-10 min after data download (~2GB), depending on CPU and CI 
 - Reproducibility details (expected outputs, network requirements): see `REPRODUCIBILITY.md`
 
 ## Data and Code Availability
+
 - Source data: GEO accession [GSE152075](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE152075)
 - Analysis code: this repository (MIT licence)
 - Frozen software environment: `renv.lock`
 - Key derived outputs: `results/figures/` and `results/tables/`
 
-## Peer Review Checklist
+## Reproduction Checks
+
 Run from the repository root:
 ```sh
 Rscript 000_install_dependencies.R
@@ -313,12 +332,12 @@ source("scripts/12_output_manifest.R")
 ## Limitations
 
 - Nasopharyngeal samples only; may not reflect lower respiratory tract
-- Primary inference uses `~ condition`; covariate-aware analyses (viral load, sex) are provided as secondary explorations
+- Primary and full-cohort models use `~ condition + gender`; viral-load and sex-interaction analyses are secondary explorations
 - Viral load stratification uses a median split, which loses information compared to continuous modelling
 - Sex-stratified interaction model may be underpowered for smaller subgroups
 - The balanced subset improves comparability, but the full cohort remains heterogeneous and likely reflects cell-composition shifts as well as transcriptional regulation
 - Cross-sectional design; no temporal dynamics
-- Future extensions: batch correction assessment, cell-type deconvolution, or integration with scRNA-seq
+- Companion [cell-type deconvolution analysis](https://github.com/Ekin-Kahraman/covid-airway-deconvolution) explores cell-composition differences; it does not remove confounding from this analysis
 
 ## Requirements
 
