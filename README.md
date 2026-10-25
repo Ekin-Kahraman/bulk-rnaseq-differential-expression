@@ -70,11 +70,12 @@ different set. The DESeq2 model adjusts for the recorded `gender` field.
 <details>
 <summary><strong>Pathway evidence — antiviral and interferon-related biology</strong></summary>
 
-**397 GO Biological Process terms** and **23 KEGG pathways** were enriched
-at FDR &lt; 0.05. Enriched GO terms include response to virus and defence response
+**204 GO Biological Process terms** and **7 KEGG pathways** were enriched
+at FDR &lt; 0.05 against the 13,279 genes eligible for differential-expression
+selection. Enriched GO terms include response to virus and defence response
 to virus, alongside cytoplasmic translation. The top KEGG pathway was
-**Coronavirus disease – COVID-19** (FDR = 4.5 × 10<sup>−39</sup>), followed by
-Ribosome and NOD-like receptor signalling.
+**Coronavirus disease – COVID-19** (FDR = 4.1 × 10<sup>−32</sup>), alongside
+ribosomal, cytokine and innate immune signalling pathways.
 
 ![GO enrichment](results/figures/go_dotplot.png)
 
@@ -87,7 +88,9 @@ uniquely specific to SARS-CoV-2.
 ![RIG-I, interferon and antiviral-effector signalling schematic](results/figures/pathway_diagram.png)
 
 [GO results](results/tables/go_biological_process.csv) ·
-[KEGG results](results/tables/kegg_pathways.csv)
+[KEGG results](results/tables/kegg_pathways.csv) ·
+[Tested-gene background](results/tables/enrichment_background.csv) ·
+[Enrichment summary](results/tables/enrichment_summary.csv)
 
 </details>
 
@@ -208,7 +211,9 @@ The full-cohort sensitivity analysis includes the primary samples.
 - **Ranking and visualisation:** `apeglm` effect-size shrinkage; variance-stabilised
   counts for exploratory PCA and clustering.
 - **Enrichment:** gene-symbol to Entrez conversion, GO Biological Process and
-  human KEGG pathways; BH correction. KEGG uses the committed reference snapshot.
+  human KEGG pathways; BH correction. Both use the same mapped background of
+  genes with finite adjusted p-values and effect estimates, including
+  non-significant genes. KEGG uses the committed reference snapshot.
 - **Sensitivity:** repeat differential expression on the full cohort and compare
   shared genes' effect directions and sizes.
 - **Secondary analyses:** median-split viral load and a `~ condition * gender`

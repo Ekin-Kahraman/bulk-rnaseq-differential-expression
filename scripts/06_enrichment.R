@@ -2,6 +2,7 @@
 # Functional enrichment analysis: GO and KEGG pathways
 
 source("scripts/config.R", local = TRUE)
+source("scripts/enrichment_input.R", local = TRUE)
 
 library(clusterProfiler)
 library(org.Hs.eg.db)
@@ -54,13 +55,10 @@ load_kegg_reference <- function(links_path, names_path) {
   list(term2gene = term2gene, term2name = term2name)
 }
 
-sig_genes <- res_df %>%
-  filter(
-    padj < analysis_config$de_padj_cutoff,
-    abs(log2FoldChange) > analysis_config$de_lfc_cutoff
-  ) %>%
-  pull(gene)
-sig_genes <- unique(sig_genes)
+enrichment_genes <- select_enrichment_genes(
+  res_df, analysis_config$de_padj_cutoff, analysis_config$de_lfc_cutoff
+)
+sig_genes <- enrichment_genes$selected
 
 n_up <- sum(
   res_df$padj < analysis_config$de_padj_cutoff & res_df$log2FoldChange > analysis_config$de_lfc_cutoff,
@@ -77,12 +75,12 @@ if (length(sig_genes) == 0) {
 }
 
 gene_map <- tryCatch({
-  bitr(sig_genes, fromType = "ENSEMBL",
+  bitr(enrichment_genes$universe, fromType = "ENSEMBL",
        toType = c("ENTREZID", "SYMBOL"),
        OrgDb = org.Hs.eg.db)
 }, error = function(e) {
   message("ENSEMBL IDs not recognized, trying SYMBOL...")
-  bitr(sig_genes, fromType = "SYMBOL",
+  bitr(enrichment_genes$universe, fromType = "SYMBOL",
        toType = c("ENTREZID"),
        OrgDb = org.Hs.eg.db)
 })
@@ -91,10 +89,21 @@ if (is.null(gene_map) || nrow(gene_map) == 0) {
   stop("Gene ID conversion failed. Check input gene names match ENSEMBL or SYMBOL format.")
 }
 
-message("Mapped ", nrow(gene_map), "/", length(sig_genes), " genes")
+id_column <- if ("ENSEMBL" %in% names(gene_map)) "ENSEMBL" else "SYMBOL"
+enrichment_input <- map_enrichment_genes(enrichment_genes, gene_map, id_column)
+background <- data.frame(
+  gene = enrichment_input$mapping[[id_column]],
+  ENTREZID = enrichment_input$mapping$ENTREZID,
+  selected = enrichment_input$mapping[[id_column]] %in% sig_genes
+)
+background <- unique(background[order(background$gene, background$ENTREZID, method = "radix"), ])
+write.csv(background, "results/tables/enrichment_background.csv", row.names = FALSE)
+message("Eligible DE background: ", length(enrichment_genes$universe),
+        " genes; mapped to ", length(enrichment_input$universe), " unique Entrez IDs")
 
 go_bp <- enrichGO(
-  gene = gene_map$ENTREZID,
+  gene = enrichment_input$selected,
+  universe = enrichment_input$universe,
   OrgDb = org.Hs.eg.db,
   ont = "BP",
   pAdjustMethod = "BH",
@@ -134,7 +143,8 @@ if (!is.null(kegg_reference)) {
   )
   kegg <- tryCatch(
     enricher(
-      gene = gene_map$ENTREZID,
+      gene = enrichment_input$selected,
+      universe = enrichment_input$universe,
       TERM2GENE = kegg_reference$term2gene,
       TERM2NAME = kegg_reference$term2name,
       pAdjustMethod = "BH",
@@ -163,6 +173,16 @@ if (!is.null(kegg)) {
   }
 }
 write.csv(kegg_df, "results/tables/kegg_pathways.csv", row.names = FALSE)
+
+enrichment_summary <- data.frame(
+  database = c("GO_BP", "KEGG"),
+  eligible_genes = length(enrichment_genes$universe),
+  selected_genes = length(sig_genes),
+  mapped_background = length(enrichment_input$universe),
+  annotated_background = c(length(go_bp@universe), if (is.null(kegg)) NA_integer_ else length(kegg@universe)),
+  enriched_terms = c(nrow(go_df), nrow(kegg_df))
+)
+write.csv(enrichment_summary, "results/tables/enrichment_summary.csv", row.names = FALSE)
 
 if (is.null(kegg) && !is.null(kegg_error)) {
   if (allow_kegg_failure) {

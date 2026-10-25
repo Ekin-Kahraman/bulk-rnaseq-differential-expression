@@ -1,0 +1,3 @@
+"database","eligible_genes","selected_genes","mapped_background","annotated_background","enriched_terms"
+"GO_BP",13279,1773,12818,11520,204
+"KEGG",13279,1773,12818,5699,7
