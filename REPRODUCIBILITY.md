@@ -39,6 +39,18 @@ FORCE_DOWNLOAD=true Rscript scripts/00_get_data.R
 ## Network dependencies
 The GEO download step (`scripts/00_get_data.R`) requires network access on first run. KEGG enrichment does not query live KEGG during routine analysis; it reads the pinned human pathway snapshot in `data/reference/` so exact table comparisons remain meaningful when KEGG changes upstream.
 
+GEO series metadata is cached beside the downloaded counts. `FORCE_DOWNLOAD=true`
+bypasses both caches. Downloads are staged separately, validated and then published;
+a failed refresh preserves the previous cache and RDS inputs. Counts and metadata
+each retry up to three times in fresh directories, so a partial or corrupt cached
+file cannot poison later attempts. Metadata retries do not repeat count processing.
+Unused platform annotations are not downloaded.
+
+Raw counts must be finite non-negative integers, with unique sample IDs and matching
+metadata for every count column. Invalid inputs fail before modelling rather than
+silently losing samples or truncating values. Tests exercise these rules and staged
+download failures with fake downloaders, without contacting GEO.
+
 ## Determinism
 The balanced subset selection uses a fixed seed (`set.seed(123)` in `scripts/01_qc.R`) so repeated runs should yield the same subset and downstream results, given the same package versions. Figure label placement for `ggrepel`-based figures is also seeded, and `results/session_info.txt` now records the active git commit, branch, and analysis configuration.
 

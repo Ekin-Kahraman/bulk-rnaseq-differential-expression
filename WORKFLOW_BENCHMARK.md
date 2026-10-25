@@ -20,7 +20,9 @@ This repository starts from a published GEO count matrix, so the benchmark below
 
 - Upstream RNA-seq processing: unlike `nf-core/rnaseq`, this repo does not perform raw-read QC, alignment, quantification, or MultiQC because the starting point is the GEO count matrix.
 - Pipeline engine: the workflow remains a sequential R-script orchestrator rather than a declarative DAG like `targets`.
-- Model complexity: the primary DE model remains `~ condition`; covariates such as age, sex, viral load, or inferred cell composition are not yet modeled explicitly.
+- Model complexity: primary and full-cohort DE use `~ condition + gender`.
+  Viral-load and condition-by-sex interaction models are secondary analyses.
+  The primary comparison does not adjust for age or inferred cell composition.
 
 ## Scope and rationale
 

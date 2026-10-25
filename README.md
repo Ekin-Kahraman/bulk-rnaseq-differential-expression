@@ -29,7 +29,7 @@
     <td valign="top">Improvement</td>
     <td>
       <strong>Checked sample matching. Consistent gene IDs. Automated result checks.</strong><br>
-      Added ID-based count/metadata alignment, gene-ID cleanup and a pinned workflow that rebuilds and compares results in CI.
+      Rejects unmatched samples and invalid counts; cleans gene IDs and rebuilds results in a pinned environment with CI checks.
     </td>
   </tr>
   <tr>
@@ -119,7 +119,8 @@ explicit data checks and traceable outputs.
 
 | Area | What changed | Why it matters |
 | --- | --- | --- |
-| **Sample matching** | Match counts to metadata by sample ID; reject unresolved or duplicate metadata IDs; check ordering and remove unknown condition labels. | Checks that each sample's expression is paired with the correct metadata. |
+| **Sample matching** | Match counts to metadata by sample ID; reject unmatched or duplicate IDs; check ordering and remove unknown condition labels. | Prevents silent sample loss and checks that expression is paired with the correct metadata. |
+| **Count integrity** | Reject missing, non-finite, negative or fractional counts before integer conversion. | Prevents silent truncation and the use of normalised expression as raw counts. |
 | **Gene IDs** | Strip version suffixes and sum counts for duplicate gene IDs before modelling. | Combines entries referring to the same gene. |
 | **Analysis checks** | Apply shared QC thresholds, use a fixed sampling seed, adjust for recorded sex and compare the balanced subset with the full cohort. | Makes the analysis choices explicit and checks sensitivity to sample selection. |
 | **Reproducibility** | Pin software and KEGG references; record versions and output checksums; rebuild results and compare tables automatically in CI. | Lets another researcher rerun the workflow and check the outputs. |
@@ -195,8 +196,10 @@ The full-cohort sensitivity analysis includes the primary samples.
 <details>
 <summary>Statistical methods and thresholds</summary>
 
-- **Sample QC:** library size &gt; 100,000 reads; samples require recorded
-  `gender` for the adjusted models.
+- **Sample QC:** library size &gt; 100,000 reads. Primary and full-cohort models
+  retain GEO's `not collected` entries as a separate gender category (4/60 and
+  53/484 samples). The sex-interaction analysis uses the 431 samples recorded
+  as F or M.
 - **Gene filtering:** CPM ≥ 1 in ≥ 10 samples; 14,220 genes in the primary test.
 - **Normalisation and testing:** DESeq2 median-of-ratios normalisation; Wald
   tests with Benjamini–Hochberg correction.

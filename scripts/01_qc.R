@@ -2,6 +2,7 @@
 # Quality control: filter samples and genes, normalize for visualization
 
 source("scripts/config.R", local = TRUE)
+source("scripts/input_validation.R", local = TRUE)
 
 library(DESeq2)
 library(edgeR)
@@ -18,10 +19,7 @@ if (!file.exists("data/metadata.rds")) {
 counts <- readRDS("data/counts_raw.rds")
 metadata <- readRDS("data/metadata.rds")
 
-metadata <- metadata[colnames(counts), , drop = FALSE]
-if (!all(colnames(counts) == rownames(metadata))) {
-  stop("Counts and metadata are not aligned by sample ID.")
-}
+metadata <- align_sample_metadata(counts, metadata)
 if (any(is.na(metadata$condition))) {
   stop("Metadata contains missing condition labels. Re-run scripts/00_get_data.R.")
 }
@@ -36,6 +34,7 @@ qc_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
+set.seed(analysis_config$sample_seed)
 ggplot(qc_data, aes(condition, library_size)) +
   geom_boxplot(outlier.shape = NA, fill = "grey85") +
   geom_jitter(width = 0.15, alpha = 0.6) +

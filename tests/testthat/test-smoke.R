@@ -109,6 +109,8 @@ test_that("output manifest tracks committed result artefacts", {
 
   actual_sizes <- file.info(file.path(root, manifest$path))$size
   expect_equal(as.numeric(manifest$bytes), as.numeric(actual_sizes))
+  actual_checksums <- unname(tools::md5sum(file.path(root, manifest$path)))
+  expect_identical(as.character(actual_checksums), manifest$md5)
   expect_true("results/tables/analysis_summary.csv" %in% manifest$path)
   expect_true("results/figures/volcano_plot.png" %in% manifest$path)
   expect_true("results/figures/sensitivity_lfc_scatter.png" %in% manifest$path)
