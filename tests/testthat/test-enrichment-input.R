@@ -29,6 +29,7 @@ testthat::test_that("published background and both enrichment denominators agree
   background <- read.csv(file.path(root, "results/tables/enrichment_background.csv"),
                          colClasses = c("character", "character", "logical"))
   summary <- read.csv(file.path(root, "results/tables/enrichment_summary.csv"))
+  analysis <- read.csv(file.path(root, "results/tables/analysis_summary.csv"))
   genes <- select_enrichment_genes(results, 0.05, 1)
   testthat::expect_true(all(background$gene %in% genes$universe))
   testthat::expect_identical(background$selected, background$gene %in% genes$selected)
@@ -40,5 +41,11 @@ testthat::test_that("published background and both enrichment denominators agree
     denominator <- as.integer(sub(".*/", "", enriched$BgRatio))
     testthat::expect_true(all(denominator == summary$annotated_background[i]))
     testthat::expect_equal(nrow(enriched), summary$enriched_terms[i])
+    aggregate_count <- if (summary$database[i] == "GO_BP") {
+      analysis$go_terms_enriched
+    } else {
+      analysis$kegg_pathways_enriched
+    }
+    testthat::expect_equal(aggregate_count, nrow(enriched))
   }
 })
